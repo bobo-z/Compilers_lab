@@ -1,17 +1,34 @@
+%option yylineno
+
 digit [0-9]
 letter [_a-zA-Z]
+
 relop >|<|>=|<=|==|!=
-blank [ \t\n\r]
+delim [ \t\r]
+ws {delim}+
+
+int [1-9]{digit}*|0
+float {int}\.{digit}+
+id {letter}({letter}|{digit})*
+type int|float
+
+
 %%
-int|float {printf("TYPE\n");}
+{type} {printf("TYPE\n");}
 struct {printf("STRUCT\n");}
 return {printf("RETURN\n");}
 if {printf("IF\n");}
 else {printf("ELSE\n");}
 while {printf("WHILE\n");}
-[1-9]{digit}*|0 { printf("Interger value: %d\n",atoi(yytext));}
-([1-9]{digit}*|0)\.{digit}+  { printf("Float value: %f\n",atof(yytext));}
-{letter}({letter}|{digit}){0,30} {printf("ID: %s\n",yytext);}
+{int} { printf("Interger value: %d\n",atoi(yytext));}
+{float}  { printf("Float value: %f\n",atof(yytext));}
+{id} {printf("ID: %s\n",yytext);}
+"/*"[^\*]*[\*]+([^\*\/][^\*]*[\*]+)*"/" {
+    printf("BLOCKd COMMENT\n");
+}
+"//".* {
+    printf("LINE COMMENT\n");
+}
 ";" {printf("SEMI\n");}
 "," {printf("COMMA\n");}
 "=" {printf("ASSIGNOP\n");}
@@ -22,9 +39,8 @@ while {printf("WHILE\n");}
 "/" {printf("DIV\n");}
 "&&" {printf("AND\n");}
 "||" {printf("OR\n");}
-
+"." {printf("DOT\n");}
 "!" {printf("NOT\n");}
-
 "(" {printf("LP\n");}
 ")" {printf("RP\n");}
 "[" {printf("LB\n");}
@@ -32,7 +48,9 @@ while {printf("WHILE\n");}
 "{" {printf("LC\n");}
 "}" {printf("RC\n");}
 
-{blank} {}
+{ws} {}
+
+
 
 . {
 printf("Error type A at Line %d: Mysterious characters \'%s\'\n",

@@ -1,0 +1,14 @@
+// this is a comment
+/**/
+/*
+
+sdfs
+*/
+
+int main()
+{
+    /*/*sdfsdfsdfds
+    ds/*fsdfds*/*/
+    int i = 1;
+    int j = ~i;
+}
