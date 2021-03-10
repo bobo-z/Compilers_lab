@@ -1,11 +1,22 @@
 
 %option yylineno
 
+%{
+    #include "syntax.tab.h"
+
+    int yycolumn = 1;
+    #define YY_USER_ACTION \
+	yylloc.first_line = yylloc.last_line = yylineno; \
+	yylloc.first_column = yycolumn; \
+	yylloc.last_column = yycolumn + yyleng - 1; \
+	yycolumn += yyleng;
+%}
+
 digit [0-9]
 letter [_a-zA-Z]
 
 relop >|<|>=|<=|==|!=
-delim [ \t\r\n]
+delim [ \t\r]
 ws {delim}+
 
 int [1-9]{digit}*|0
@@ -130,6 +141,8 @@ while {
     return RC;
 }
 
+\n { yycolumn = 1;}
+
 {ws} {}
 
 
@@ -140,4 +153,4 @@ yylineno, yytext);
 }
 
 %%
-#include "syntax.tab.h"
+

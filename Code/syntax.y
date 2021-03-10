@@ -1,5 +1,8 @@
+%locations
 %{
     #include <stdio.h>
+    int yylex(void);
+    extern void yyerror(char *msg);
 %}
 
 /* declared types */
@@ -24,12 +27,27 @@
 %token RETURN
 %token IF ELSE WHILE
 
+%right ASSIGNOP
+%left OR
+%left AND
+%left RELOP
+%left PLUS MINUS
+%left STAR DIV
+%right NOT
+%left DOT LB
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
+
 
 /* declared non-terminals */
 
 %%
 /* High-level Definitions */
-Program: ExtDefList;
+Program: ExtDefList{
+    printf("line:%d\n",@$.first_line);
+}
+    ;
 ExtDefList: /* empty */
     | ExtDef ExtDefList
     ;
@@ -76,7 +94,7 @@ StmtList: /* empty */
 Stmt: Exp SEMI
     | CompSt
     | RETURN Exp SEMI
-    | IF LP Exp RP Stmt
+    | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE
     | IF LP Exp RP Stmt ELSE Stmt
     | WHILE LP Exp RP Stmt
     ;
@@ -119,6 +137,6 @@ Args: Exp COMMA Args
     ;
 %%
 #include "lex.yy.c"
-yyerror(char* msg){
+void yyerror(char* msg){
     fprintf(stderr, "error: %s\n",msg);
 }
