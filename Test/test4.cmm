@@ -1,0 +1,6 @@
+/* test3 */
+int inc()
+{
+    int i;
+    i = i + 1;
+}

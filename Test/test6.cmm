@@ -1,0 +1,9 @@
+/* option test5 */
+int main()
+{
+    // line comment
+    /*
+    block comment
+    */
+    int i = 1;
+}
