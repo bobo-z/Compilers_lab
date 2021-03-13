@@ -2,17 +2,20 @@
 
 Node *InitNode(char *name, int lineno, int type)
 {
-    //printf("in InitNode\n");
+    //printf("in InitNode:%s\n",name);
     Node *node = (Node *)malloc(sizeof(Node));
     //printf("malloc finish\n");
     strncpy(node->name,name,NAME_LEN);
+    //printf("1234\n");
     node->lineno = lineno;
+    
     assert(type >= 0 && type <= 4);
     node->type = type;
     node->int_val = node->float_val = 0;
-    node->char_val = "\0";
+    memset(node->char_val,'\0',sizeof(node->char_val));
     node->children = NULL;
     node->child_num = 0;
+    //printf("4321\n");
 
     return node;
 }
@@ -20,7 +23,7 @@ Node *InitNode(char *name, int lineno, int type)
 /* refer to https://www.cnblogs.com/edver/p/8419807.html */
 void AddChild(Node *father, int num, ...)
 {
-
+    //printf("444\n");
     va_list vl;
     va_start(vl, num);
     father->child_num = num;

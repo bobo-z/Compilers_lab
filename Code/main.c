@@ -2,6 +2,7 @@
 //extern FILE* yyin;
 extern Node* root;
 extern int Error;
+extern int yydebug;
 extern int yyparse (void);
 extern void yyrestart (FILE *input_file  );
 int main(int argc, char **argv)
@@ -15,9 +16,12 @@ int main(int argc, char **argv)
         return 1;
     }
     yyrestart(f);
+    //yydebug = 1;
     yyparse();
     if(!Error)
+    {
         PrintTree(root,0);
+    }
     return 0;
     /*lex test
     if (argc > 1)

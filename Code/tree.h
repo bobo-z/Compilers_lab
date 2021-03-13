@@ -19,7 +19,7 @@ typedef struct node
     {
         int int_val;
         float float_val;
-        char *char_val;
+        char char_val[NAME_LEN];
     };
     struct node **children;
     int child_num;

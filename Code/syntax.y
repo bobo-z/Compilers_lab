@@ -45,8 +45,9 @@
 %%
 /* High-level Definitions */
 Program: ExtDefList {
+        
+        $$=root=InitNode("Program", @$.first_line,SYNTAX_UNIT);
         //printf("in program\n");
-        $$ = root = InitNode("Program", @$.first_line,SYNTAX_UNIT);
         AddChild($$, 1, $1);
     }
     ;
