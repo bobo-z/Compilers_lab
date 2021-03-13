@@ -58,89 +58,253 @@ ExtDefList: /* empty */{
         AddChild($$,2,$1,$2);
     }
     ;
-ExtDef: Specifier ExtDecList SEMI
-    | Specifier SEMI
-    | Specifier FunDec CompSt
+ExtDef: Specifier ExtDecList SEMI{
+        $$ = InitNode("ExtDef", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Specifier SEMI{
+        $$ = InitNode("ExtDef",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
+    | Specifier FunDec CompSt{
+        $$ = InitNode("ExtDef", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
     ;
-ExtDecList: VarDec
-    | VarDec COMMA ExtDecList
+ExtDecList: VarDec{
+        $$ =  InitNode("ExtDecList", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
+    | VarDec COMMA ExtDecList{
+        $$ = InitNode("ExtDecList", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
     ;
 
 /* Specifier */
-Specifier: TYPE
-    | StructSpecifier
+Specifier: TYPE{
+        $$ = InitNode("Specifier", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
+    | StructSpecifier{
+        $$ = InitNode("Specifier", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
     ;
-StructSpecifier: STRUCT OptTag LC DefList RC
-    | STRUCT Tag
+StructSpecifier: STRUCT OptTag LC DefList RC{
+        $$ = InitNode("StructSpecifier", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,5,$1,$2,$3,$4,$5);       
+    }
+    | STRUCT Tag{
+        $$ = InitNode("StructSpecifier",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
     ;
-OptTag: /* empty */
-    | ID
+OptTag: /* empty */{
+        $$ = NULL;
+    }
+    | ID{
+        $$ = InitNode("OptTag", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
     ;
-Tag: ID
+Tag: ID{
+        $$ = InitNode("Tag", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
     ;
 
 /* Declarators */
-VarDec: ID
-    | VarDec LB INT RB
+VarDec: ID{
+        $$ = InitNode("VarDec", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
+    | VarDec LB INT RB{
+        $$ = InitNode("VarDec", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,4,$1,$2,$3,$4);
+    }
     ;
-FunDec: ID LP VarList RP
-    | ID LP RP
+FunDec: ID LP VarList RP{
+        $$ = InitNode("FunDec", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,4,$1,$2,$3,$4);
+    }
+    | ID LP RP{
+        $$ = InitNode("FunDec", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
     ;
-VarList: ParamDec COMMA VarList
-    | ParamDec
+VarList: ParamDec COMMA VarList{
+        $$ = InitNode("VarList", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+
+    //TODO
+    | ParamDec{
+        $$ = InitNode("VarList", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
     ;
-ParamDec: Specifier VarDec
+ParamDec: Specifier VarDec{
+        $$ = InitNode("ParamDec",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
     ;
 
 /* Statement */
-CompSt: LC DefList StmtList RC
+CompSt: LC DefList StmtList RC{
+        $$ = InitNode("CompSt", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,4,$1,$2,$3,$4);
+    }
     ;
-StmtList: /* empty */
-    | Stmt StmtList
+StmtList: /* empty */{
+        $$ = NULL;
+    }
+    | Stmt StmtList{
+        $$ = InitNode("StmtList",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
     ;
-Stmt: Exp SEMI
-    | CompSt
-    | RETURN Exp SEMI
-    | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE
-    | IF LP Exp RP Stmt ELSE Stmt
-    | WHILE LP Exp RP Stmt
+Stmt: Exp SEMI{
+        $$ = InitNode("Stmt",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
+    | CompSt{
+        $$ = InitNode("Stmt", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
+    | RETURN Exp SEMI{
+        $$ = InitNode("Stmt", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE{
+        $$ = InitNode("Stmt", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,5,$1,$2,$3,$4,$5);
+    }
+    | IF LP Exp RP Stmt ELSE Stmt{
+        $$ = InitNode("Stmt", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,7,$1,$2,$3,$4,$5,$6,$7);
+    }
+    | WHILE LP Exp RP Stmt{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,5,$1,$2,$3,$4,$5);
+    }
     ;
 
 /* Local Definitions */
-DefList: /* empty */
-    | Def DefList
+DefList: /* empty */{
+    $$ = NULL;
+    }
+    | Def DefList{
+        $$ = InitNode("DefList",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
     ;
-Def: Specifier DecList SEMI
+Def: Specifier DecList SEMI{
+        $$ = InitNode("Def", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
     ;
-DecList: Dec
-    | Dec COMMA DecList
+DecList: Dec{
+        $$ = InitNode("DecList", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
+    | Dec COMMA DecList{
+        $$ = InitNode("DecList", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
     ;
-Dec: VarDec
-    | VarDec ASSIGNOP Exp
+Dec: VarDec{
+        $$ = InitNode("Dec", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
+    | VarDec ASSIGNOP Exp{
+        $$ = InitNode("Dec", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
     ;
 
 /* Expressions */
-Exp: Exp ASSIGNOP Exp
-    | Exp AND Exp
-    | Exp OR Exp
-    | Exp RELOP Exp
-    | Exp PLUS Exp
-    | Exp MINUS Exp
-    | Exp STAR Exp
-    | Exp DIV Exp
-    | LP Exp RP
-    | MINUS Exp
-    | NOT Exp
-    | ID LP Args RP
-    | ID LP RP
-    | Exp LB Exp RB
-    | Exp DOT ID
-    | ID
-    | INT
-    | FLOAT
+Exp: Exp ASSIGNOP Exp{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp AND Exp{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp OR Exp{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp RELOP Exp{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp PLUS Exp{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp MINUS Exp{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp STAR Exp{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp DIV Exp{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | LP Exp RP{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | MINUS Exp{
+        $$ = InitNode("Exp",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
+    | NOT Exp{
+        $$ = InitNode("Exp",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
+    | ID LP Args RP{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,4,$1,$2,$3,$4);
+    }
+    | ID LP RP{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp LB Exp RB{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,4,$1,$2,$3,$4);
+    }
+    | Exp DOT ID{
+        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | ID{
+        $$ = InitNode("Exp", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
+    | INT{
+        $$ = InitNode("Exp", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
+    | FLOAT{
+        $$ = InitNode("Exp", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
     ;
-Args: Exp COMMA Args
-    | Exp
+Args: Exp COMMA Args{
+        $$ = InitNode("Args", @$.first_line, SYNTAX_UNIT);
+        AddChild($$,3,$1,$2,$3);
+    }
+    | Exp{
+        $$ = InitNode("Args", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
+    }
     ;
 %%
 #include "lex.yy.c"
