@@ -1,20 +1,18 @@
 %locations
 %{
-    #include <stdio.h>
-    int yylex(void);
+    #include "common.h"
+    #define YYSTYPE Node*
+
+    Node* root;
+    extern int yylex(void);
     extern void yyerror(char *msg);
 %}
 
 /* declared types */
-%union {
-    int type_int;
-    float type_float;
-    double type_double;
-}
 
 /* declared tokens */
-%token <type_int> INT
-%token <type_float> FLOAT
+%token INT
+%token FLOAT
 %token ID
 %token SEMI COMMA
 %token ASSIGNOP RELOP
@@ -44,9 +42,9 @@
 
 %%
 /* High-level Definitions */
-Program: ExtDefList{
-    printf("line:%d\n",@$.first_line);
-}
+Program: ExtDefList {
+        //ss
+    }
     ;
 ExtDefList: /* empty */
     | ExtDef ExtDefList
@@ -138,5 +136,5 @@ Args: Exp COMMA Args
 %%
 #include "lex.yy.c"
 void yyerror(char* msg){
-    fprintf(stderr, "error: %s\n",msg);
+    fprintf(stderr, "Error type B at Line %d: %s.\n", yylloc.first_line, msg);
 }
