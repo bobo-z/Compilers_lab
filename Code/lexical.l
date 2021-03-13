@@ -3,7 +3,7 @@
 
 %{
     #include "syntax.tab.h"
-
+    
     int yycolumn = 1;
     #define YY_USER_ACTION \
 	yylloc.first_line = yylloc.last_line = yylineno; \
@@ -148,7 +148,8 @@ while {
 
 
 . {
-printf("Error type A at Line %d: Mysterious characters \'%s\'\n",
+    Error = 1;
+    fprintf(stderr,"Error type A at Line %d: Mysterious characters \'%s\'\n",
 yylineno, yytext);
 }
 

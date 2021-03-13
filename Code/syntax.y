@@ -3,9 +3,11 @@
     #include "common.h"
     #define YYSTYPE Node*
 
-    Node* root;
     extern int yylex(void);
     extern void yyerror(char *msg);
+
+    Node* root = NULL;
+    int Error = 0;
 %}
 
 /* declared types */
@@ -43,11 +45,18 @@
 %%
 /* High-level Definitions */
 Program: ExtDefList {
-        //ss
+        //printf("in program\n");
+        $$ = root = InitNode("Program", @$.first_line,SYNTAX_UNIT);
+        AddChild($$, 1, $1);
     }
     ;
-ExtDefList: /* empty */
-    | ExtDef ExtDefList
+ExtDefList: /* empty */{
+        $$ = NULL;
+    }
+    | ExtDef ExtDefList{
+        $$ = InitNode("ExtDefList",@$.first_line, SYNTAX_UNIT);
+        AddChild($$,2,$1,$2);
+    }
     ;
 ExtDef: Specifier ExtDecList SEMI
     | Specifier SEMI
@@ -136,5 +145,6 @@ Args: Exp COMMA Args
 %%
 #include "lex.yy.c"
 void yyerror(char* msg){
+    Error = 1;
     fprintf(stderr, "Error type B at Line %d: %s.\n", yylloc.first_line, msg);
 }

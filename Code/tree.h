@@ -8,9 +8,11 @@
 #define CHAR_UNIT 3
 #define OTHER_UNIT 4//tokens except int, float, id, type
 
+#define NAME_LEN 30
+
 typedef struct node
 {
-    char *name;
+    char name[NAME_LEN];
     int lineno;
     int type;
     union

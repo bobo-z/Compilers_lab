@@ -2,8 +2,10 @@
 
 Node *InitNode(char *name, int lineno, int type)
 {
+    //printf("in InitNode\n");
     Node *node = (Node *)malloc(sizeof(Node));
-    strcpy(node->name, name);
+    //printf("malloc finish\n");
+    strncpy(node->name,name,NAME_LEN);
     node->lineno = lineno;
     assert(type >= 0 && type <= 4);
     node->type = type;
@@ -18,6 +20,7 @@ Node *InitNode(char *name, int lineno, int type)
 /* refer to https://www.cnblogs.com/edver/p/8419807.html */
 void AddChild(Node *father, int num, ...)
 {
+
     va_list vl;
     va_start(vl, num);
     father->child_num = num;
@@ -28,10 +31,12 @@ void AddChild(Node *father, int num, ...)
         father->children[i] = va_arg(vl, Node *);
     }
     va_end(vl);
+    //printf("end\n");
 }
 
 void PrintTree(Node *cur_node, int depth)
 {
+    //printf("in PrintTree\n");
     if (cur_node == NULL)
         return;
     int i;
