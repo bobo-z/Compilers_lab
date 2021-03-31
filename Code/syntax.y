@@ -1,10 +1,14 @@
 %locations
+%define parse.error verbose
+
 %{
     #include "common.h"
     #define YYSTYPE Node*
 
+    
+
     extern int yylex(void);
-    extern void yyerror(char *msg);
+    void yyerror(const char *msg);
 
     Node* root = NULL;
     int Error = 0;
@@ -71,6 +75,9 @@ ExtDef: Specifier ExtDecList SEMI{
         $$ = InitNode("ExtDef", @$.first_line, SYNTAX_UNIT);
         AddChild($$,3,$1,$2,$3);
     }
+    | error SEMI{
+        yyerrok;
+    }
     ;
 ExtDecList: VarDec{
         $$ =  InitNode("ExtDecList", @$.first_line,SYNTAX_UNIT);
@@ -124,6 +131,9 @@ VarDec: ID{
         $$ = InitNode("VarDec", @$.first_line, SYNTAX_UNIT);
         AddChild($$,4,$1,$2,$3,$4);
     }
+    | VarDec LB error RB{
+        yyerrok;
+    }
     ;
 FunDec: ID LP VarList RP{
         $$ = InitNode("FunDec", @$.first_line, SYNTAX_UNIT);
@@ -132,6 +142,9 @@ FunDec: ID LP VarList RP{
     | ID LP RP{
         $$ = InitNode("FunDec", @$.first_line, SYNTAX_UNIT);
         AddChild($$,3,$1,$2,$3);
+    }
+    | error RP{
+        yyerrok;
     }
     ;
 VarList: ParamDec COMMA VarList{
@@ -155,6 +168,9 @@ ParamDec: Specifier VarDec{
 CompSt: LC DefList StmtList RC{
         $$ = InitNode("CompSt", @$.first_line, SYNTAX_UNIT);
         AddChild($$,4,$1,$2,$3,$4);
+    }
+    | error RC{
+        yyerrok;
     }
     ;
 StmtList: /* empty */{
@@ -186,9 +202,12 @@ Stmt: Exp SEMI{
         AddChild($$,7,$1,$2,$3,$4,$5,$6,$7);
     }
     | WHILE LP Exp RP Stmt{
-        $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
+        $$ = InitNode("Stmt", @$.first_line, SYNTAX_UNIT);
         AddChild($$,5,$1,$2,$3,$4,$5);
     }
+    | error SEMI{
+        yyerrok;
+    } 
     ;
 
 /* Local Definitions */
@@ -203,6 +222,9 @@ DefList: /* empty */{
 Def: Specifier DecList SEMI{
         $$ = InitNode("Def", @$.first_line, SYNTAX_UNIT);
         AddChild($$,3,$1,$2,$3);
+    }
+    | Specifier error SEMI{
+        yyerrok;
     }
     ;
 DecList: Dec{
@@ -297,6 +319,16 @@ Exp: Exp ASSIGNOP Exp{
         $$ = InitNode("Exp", @$.first_line,SYNTAX_UNIT);
         AddChild($$, 1, $1);
     }
+    | Exp LB error RB{
+        yyerrok;
+        //yyerror("Missing ']'");
+    }
+    | LP error RP{
+        yyerrok;
+    }
+    | ID LP error RP{
+        yyerrok;
+    }
     ;
 Args: Exp COMMA Args{
         $$ = InitNode("Args", @$.first_line, SYNTAX_UNIT);
@@ -306,10 +338,14 @@ Args: Exp COMMA Args{
         $$ = InitNode("Args", @$.first_line,SYNTAX_UNIT);
         AddChild($$, 1, $1);
     }
+    | error COMMA Args{
+        yyerrok;
+    }
     ;
 %%
 #include "lex.yy.c"
-void yyerror(char* msg){
+
+void yyerror(const char* msg){
     Error = 1;
     fprintf(stderr, "Error type B at Line %d: %s.\n", yylloc.first_line, msg);
 }

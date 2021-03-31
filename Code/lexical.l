@@ -183,7 +183,7 @@ while {
 
 . {
     Error = 1;
-    fprintf(stderr,"Error type A at Line %d: Mysterious characters \'%s\'\n",
+    fprintf(stderr,"Error type A at Line %d: Mysterious characters \'%s\'.\n",
 yylineno, yytext);
 }
 
