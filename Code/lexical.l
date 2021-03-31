@@ -63,7 +63,8 @@ while {
 {int} {
     /*printf("Interger value: %d\n",atoi(yytext));*/
     yylval = InitNode("INT",yylineno,INT_UNIT);
-    yylval->int_val = atoi(yytext);
+    yylval->int_val = (unsigned int)atol(yytext);
+    //printf("%s %d\n",yytext,yylval->int_val);
     return INT;
 }
 {float}  {

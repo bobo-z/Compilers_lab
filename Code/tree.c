@@ -52,7 +52,7 @@ void PrintTree(Node *cur_node, int depth)
         printf("%s (%d)\n", cur_node->name, cur_node->lineno);
         break;
     case INT_UNIT:
-        printf("%s: %d\n", cur_node->name, cur_node->int_val);
+        printf("%s: %u\n", cur_node->name, cur_node->int_val);
         break;
     case FLOAT_UNIT:
         printf("%s: %f\n", cur_node->name, cur_node->float_val);

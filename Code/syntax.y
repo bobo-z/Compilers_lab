@@ -37,7 +37,7 @@
 %left RELOP
 %left PLUS MINUS
 %left STAR DIV
-%right NOT
+%right NOT NEG
 %left DOT LB
 
 %nonassoc LOWER_THAN_ELSE
@@ -283,7 +283,7 @@ Exp: Exp ASSIGNOP Exp{
         $$ = InitNode("Exp", @$.first_line, SYNTAX_UNIT);
         AddChild($$,3,$1,$2,$3);
     }
-    | MINUS Exp{
+    | MINUS Exp %prec NEG{
         $$ = InitNode("Exp",@$.first_line, SYNTAX_UNIT);
         AddChild($$,2,$1,$2);
     }

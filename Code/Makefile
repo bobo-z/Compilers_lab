@@ -27,7 +27,7 @@ lexical: $(LFILE)
 	$(FLEX) -o $(LFC) $(LFILE)
 
 syntax-c: $(YFILE)
-	$(BISON) -o $(YFC) -d -v -t  $(YFILE)
+	$(BISON) -o $(YFC) -d -v -t   $(YFILE)
 
 -include $(patsubst %.o, %.d, $(OBJS))
 

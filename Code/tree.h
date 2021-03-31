@@ -17,7 +17,7 @@ typedef struct node
     int type;
     union
     {
-        int int_val;
+        unsigned int int_val;
         float float_val;
         char char_val[NAME_LEN];
     };
