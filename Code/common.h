@@ -9,5 +9,6 @@
 
 #include "tree.h"
 #include "type.h"
+#include "symbol_tab.h"
 
 #endif
