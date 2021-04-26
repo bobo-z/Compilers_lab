@@ -2,7 +2,8 @@
 #define TYPE_H_
 typedef struct Type_* Type;
 typedef struct FieldList_* FieldList;
-
+#define INT 1
+#define FLOAT 2
 struct Type_
 {
     enum { BASIC, ARRAY, STRUCTURE } kind;
@@ -16,7 +17,7 @@ struct Type_
 
 struct FieldList_
 {
-    char* name;
+    char name[NAME_LEN];
     Type type;
     FieldList tail;
 };

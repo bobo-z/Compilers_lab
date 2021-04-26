@@ -10,5 +10,6 @@
 #include "tree.h"
 #include "type.h"
 #include "symbol_tab.h"
+#include "semantic.h"
 
 #endif
