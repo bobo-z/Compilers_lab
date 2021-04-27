@@ -3,6 +3,7 @@ int annoy_struct_num = 0;
 
 void semantic(Node *p)
 {
+    init();
     if (strcmp(p->name, "Program") == 0)
         ExtDefList(p->children[0]);
 }
@@ -31,14 +32,17 @@ void ExtDef(Node *p)
     {
         //ExtDef: Specifier ExtDecList SEMI
         Type t = Specifer(p->children[0]);
-        ExtDecList(p->children[1], t);
+        if (t != NULL)
+        {
+            ExtDecList(p->children[1], t);
+        }
     }
     else
     {
         //ExtDef: Specifier FunDec CompSt
         Type t = Specifer(p->children[0]);
         FunDec(p->children[1], t);
-        CompSt(p->children[2]);
+        CompSt(p->children[2], t);
     }
 }
 
@@ -53,22 +57,20 @@ Type Specifer(Node *p)
         if (p_struct->child_num == 2)
         {
             //STRUCT Tag
-            FieldList f = find(p_struct->children[1]->char_val, 0);
+            FieldList f = find(p_struct->children[1]->children[0]->char_val, 0);
             if (f != NULL)
             {
-                return f->type;
+                t = f->type;
             }
             else
             {
-                //TODO: error
+                //TODO: error 17
+                fprintf(stderr, "Error type 17 at line %d: Undefined struct \"%s\".\n", p_struct->children[1]->lineno, p_struct->children[1]->children[0]->char_val);
             }
         }
         else
         {
-            t = (Type)malloc(sizeof(struct Type_));
             //STRUCT OptTag LC DefList RC
-            //FieldList f = (FieldList)malloc(sizeof(struct FieldList_));
-            t->kind = STRUCTURE;
             char name[NAME_LEN];
             if (p_struct->children[1] == NULL)
             {
@@ -80,14 +82,17 @@ Type Specifer(Node *p)
             {
                 strncpy(name, p_struct->children[1]->children[0]->char_val, NAME_LEN);
             }
-            t->u.structure = DefList(p->children[3]);
             if (find(name, 0) == NULL)
             {
+                t = (Type)malloc(sizeof(struct Type_));
+                t->kind = STRUCTURE;
+                t->u.structure = DefList(p_struct->children[3], 1);
                 insert(name, t);
             }
             else
             {
-                //TODO:error
+                //TODO:error 16
+                fprintf(stderr, "Error type 16 at line %d: Duplicated name \"%s\".\n", p_struct->children[0]->lineno, name);
             }
         }
     }
@@ -110,29 +115,33 @@ Type Specifer(Node *p)
 
 void ExtDecList(Node *p, Type t)
 {
-    VarDec(p->children[0], t);
+    VarDec(p->children[0], t, 0);
     if (p->child_num == 3)
         ExtDecList(p->children[2], t);
 }
 
-FieldList VarDec(Node *p, Type t)
+FieldList VarDec(Node *p, Type t, int struct_def)
 {
+    FieldList f = NULL;
     if (p->child_num == 1)
     {
         //VarDec: ID
-        if (find(p->children[0]->char_val, 0) == NULL)
+        FieldList temp = find(p->children[0]->char_val, 0);
+        if (struct_def == 1 || NULL == temp)
         {
-            insert(p->children[0]->char_val, t);
-            FieldList f = (FieldList)malloc(sizeof(struct FieldList_));
+            if (struct_def == 0)
+            {
+                insert(p->children[0]->char_val, t);
+            }
+            f = (FieldList)malloc(sizeof(struct FieldList_));
             strncpy(f->name, p->children[0]->char_val, NAME_LEN);
             f->type = t;
             f->tail = NULL;
-            return f;
         }
         else
         {
-            //TODO: error
-            return NULL;
+            //TODO: error 3
+            fprintf(stderr, "Error type 3 at line %d: Redefined variable \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
         }
     }
     else
@@ -142,14 +151,19 @@ FieldList VarDec(Node *p, Type t)
         arr_t->kind = ARRAY;
         arr_t->u.array.elem = t;
         arr_t->u.array.size = p->children[2]->int_val;
-        VarDec(p->children[0], arr_t);
+        VarDec(p->children[0], arr_t, struct_def);
     }
+    return f;
 }
 
 void FunDec(Node *p, Type t)
 {
-    if(find(p->children[0]->char_val,1)!=NULL)
+    if (find(p->children[0]->char_val, 1) != NULL)
+    {
+        //error 4
+        fprintf(stderr, "Error type 4 at line %d: Redefined function \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
         return;
+    }
     Type fun_t = (Type)malloc(sizeof(struct Type_));
     fun_t->kind = FUNCTION;
     fun_t->u.function.ret = t;
@@ -160,10 +174,10 @@ void FunDec(Node *p, Type t)
         //FunDec: ID LP VarList RP
         Node *var_p = p->children[2];
         //ParamDec
-        while(1)
+        while (1)
         {
             Type paramdec_t = Specifer(var_p->children[0]->children[0]);
-            FieldList paradec_f = VarDec(var_p->children[0]->children[1], paramdec_t);
+            FieldList paradec_f = VarDec(var_p->children[0]->children[1], paramdec_t, 0);
             if (fun_t->u.function.param == NULL)
             {
                 fun_t->u.function.param = paradec_f;
@@ -174,7 +188,7 @@ void FunDec(Node *p, Type t)
                 cur->tail = paradec_f;
                 cur = cur->tail;
             }
-            if(var_p->child_num!=1)
+            if (var_p->child_num != 1)
             {
                 var_p = var_p->children[2];
             }
@@ -187,10 +201,183 @@ void FunDec(Node *p, Type t)
     insert(p->children[0]->char_val, fun_t);
 }
 
-void CompSt(Node *p)
+void CompSt(Node *p, Type ret)
 {
+    //ret: return type
+    DefList(p->children[1], 0);
+    Node *stmtlist = p->children[2];
+    while (stmtlist != NULL)
+    {
+        Stmt(stmtlist->children[0], ret);
+        stmtlist = stmtlist->children[1];
+    }
 }
 
-FieldList DefList(Node *p)
+void Stmt(Node *p, Type ret)
 {
+    Type exp_t = NULL;
+    switch (p->child_num)
+    {
+    case 1:
+        //CompSt
+        CompSt(p->children[0], ret);
+        break;
+    case 2:
+        //Exp SEMI
+        Exp(p->children[0]);
+        break;
+    case 3:
+        //RETURN Exp SEMI
+        exp_t = Exp(p->children[1]);
+        if (Type_Check(ret, exp_t) == 0)
+        {
+            //False
+            //TODO:error 8
+            fprintf(stderr, "Error type 8 at Line %d: Type mismatched for return.\n", p->children[0]->lineno);
+        }
+        break;
+    case 5:
+        /*
+        if (strcmp(p->children[0]->name, "IF") == 0)
+        {
+            //IF LP Exp RP Stmt
+            
+        }
+        else
+        {
+            //WHILE LP Exp RP Stmt
+        }
+        */
+        exp_t = Exp(p->children[2]);
+        if (exp_t->kind != BASIC_INT)
+        {
+            //TODO:error
+        }
+        Stmt(p->children[4], ret);
+        break;
+    case 7:
+        //IF LP Exp RP Stmt ELSE Stmt
+        exp_t = Exp(p->children[2]);
+        if (exp_t->kind != BASIC_INT)
+        {
+            //TODO:error
+        }
+        Stmt(p->children[4], ret);
+        Stmt(p->children[6], ret);
+        break;
+    default:
+        break;
+    }
+}
+
+FieldList DefList(Node *p, int struct_def)
+{
+    FieldList ret=NULL, cur = NULL;
+    while (p != NULL)
+    {
+        Node *def = p->children[0];
+        Type def_t = Specifer(def->children[0]);
+        Node *declist = def->children[1];
+        while (1)
+        {
+            if (declist->children[0]->child_num == 1)
+            {
+                FieldList f = VarDec(declist->children[0]->children[0], def_t, struct_def);
+                if (f != NULL)
+                {
+                    if (struct_def == 1 && Struct_Def_exist(ret, f->name) == 1)
+                    {
+                        //TODO:error 15
+                        fprintf(stderr, "Error type 15 at line %d: Redefined field \"%s\".\n", declist->children[0]->lineno, f->name);
+                    }
+                    else
+                    {
+                        //insert into fieldlist
+                        
+                        if ( NULL==ret)
+                        {
+                            ret = f;
+                            cur = ret;
+                        }
+                        else
+                        {
+                            cur->tail = f;
+                            cur = cur->tail;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                //Dec: VarDec ASSIGNOP Exp
+                if (struct_def == 1)
+                {
+                    //TODO:error 15
+                    fprintf(stderr, "Error type 15 at line %d: Can not initialize fields.\n", declist->children[0]->lineno);
+                }
+                else
+                {
+                    Type exp_t = Exp(declist->children[0]->children[2]);
+                    if (exp_t != NULL)
+                    {
+                        FieldList f = VarDec(declist->children[0]->children[0], def_t, 0);
+                        if (f != NULL)
+                        {
+                            if (Type_Check(f->type, exp_t) == 1)
+                            {
+                                if (ret == NULL)
+                                {
+                                    ret = f;
+                                    cur = ret;
+                                }
+                                else
+                                {
+                                    cur->tail = f;
+                                    cur = cur->tail;
+                                }
+                            }
+                            else
+                            {
+                                //error 5
+                                fprintf(stderr, "Error type 5 at line %d: Type mismatched for assignment.\n", declist->children[0]->children[1]->lineno);
+                            }
+                        }
+                    }
+                }
+            }
+            if (declist->child_num == 3)
+            {
+                declist = declist->children[2];
+            }
+            else
+            {
+                break;
+            }
+        }
+        p = p->children[1];
+    }
+    return ret;
+}
+
+Type Exp(Node *p)
+{
+    return NULL;
+}
+
+int Type_Check(Type t1, Type t2)
+{
+    //equal 1
+    //neq 0
+    return 0;
+}
+
+int Struct_Def_exist(FieldList f, char *name)
+{
+    while (f != NULL)
+    {
+        if (strcmp(f->name, name) == 0)
+            return 1;
+        f = f->tail;
+    }
+    return 0;
 }

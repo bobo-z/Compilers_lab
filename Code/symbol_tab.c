@@ -2,21 +2,21 @@
 
 FieldList symbol_tab[TAB_SIZE];
 
-FieldList init()
+void init()
 {
     int i;
     for(i=0;i<TAB_SIZE;i++)
         symbol_tab[i] = NULL;
 }
-unsigned int hash_bkdr(char* name)
+unsigned int hash_pjw(char* name)
 {
-    unsigned int hash = 0;
-    unsigned int seed = 131;
-    while(*name)
+    unsigned int val = 0,i;
+    for(; *name;++name)
     {
-        hash = hash * seed + (*name++);
+        val = (val << 2) + *name;
+        if(i=val & ~0x3fff) val = (val ^ (i>> 12)) & 0x3fff;
     }
-    return hash%32767;
+    return val;
 }
 
 FieldList find(char* name, int function_find)
@@ -24,7 +24,9 @@ FieldList find(char* name, int function_find)
     //function_find
     //1: compare name with function name
     //0: compare name with var or struct
-    unsigned int key = hash_bkdr(name)%TAB_SIZE;
+   // printf("in find %s\n",name);
+    unsigned int key = hash_pjw(name);
+   // printf("%s-%d\n", name, key);
     FieldList p = symbol_tab[key];
     while(p!=NULL)
     {
@@ -37,18 +39,20 @@ FieldList find(char* name, int function_find)
         }
         p = p->tail;
     }
+    //printf("find null\n");
     return NULL;
 }
 
 FieldList insert(char* name, Type type)
 {
-    unsigned int key = hash_bkdr(name)%TAB_SIZE;
+    
+    unsigned int key = hash_pjw(name)%TAB_SIZE;
     FieldList p = (FieldList)malloc(sizeof(struct FieldList_));
     //p->name = name;
     strncpy(p->name,name,NAME_LEN);
     p->type =type;
     p->tail = NULL;
-    if(symbol_tab[key]==NULL)
+    if(NULL==symbol_tab[key])
     {
         symbol_tab[key] = p;
     }

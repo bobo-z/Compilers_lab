@@ -4,13 +4,13 @@
 #include "type.h"
 
 #define NAME_LEN 30
-#define TAB_SIZE 10000
+#define TAB_SIZE 16384
 
-FieldList init();
+void init();
 FieldList insert(char* name, Type type);
 FieldList find(char* name, int function_find);
 FieldList struct_find(char* name, Type type);
-unsigned int hash_bkdr(char* name);
+unsigned int hash_pjw(char* name);
 
 
 #endif
