@@ -1,9 +1,5 @@
-/* option test5 */
 int main()
 {
-    // line comment
-    /*
-    block comment
-    */
-    int i = 1;
+    int i;
+    10 = i;
 }

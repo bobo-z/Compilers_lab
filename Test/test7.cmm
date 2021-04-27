@@ -1,11 +1,5 @@
-/* option test6 */
 int main()
 {
-    /*
-    comment
-    
-    nested comment
-    
-    */
-    int i = 1;
+    float j;
+    10 + j;
 }

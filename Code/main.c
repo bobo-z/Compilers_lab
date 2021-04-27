@@ -20,7 +20,8 @@ int main(int argc, char **argv)
     yyparse();
     if(!Error)
     {
-        PrintTree(root,0);
+        //PrintTree(root,0);
+        semantic(root);
     }
     return 0;
     /*lex test
