@@ -1,6 +1,6 @@
 #include "semantic.h"
 int annoy_struct_num = 0;
-
+//TODO: struct defined in a struct should not add
 void semantic(Node *p)
 {
     init();
@@ -151,7 +151,7 @@ FieldList VarDec(Node *p, Type t, int struct_def)
         arr_t->kind = ARRAY;
         arr_t->u.array.elem = t;
         arr_t->u.array.size = p->children[2]->int_val;
-        VarDec(p->children[0], arr_t, struct_def);
+        f = VarDec(p->children[0], arr_t, struct_def);
     }
     return f;
 }
@@ -204,6 +204,7 @@ void FunDec(Node *p, Type t)
 void CompSt(Node *p, Type ret)
 {
     //ret: return type
+
     DefList(p->children[1], 0);
     Node *stmtlist = p->children[2];
     while (stmtlist != NULL)
@@ -272,7 +273,7 @@ void Stmt(Node *p, Type ret)
 
 FieldList DefList(Node *p, int struct_def)
 {
-    FieldList ret=NULL, cur = NULL;
+    FieldList ret = NULL, cur = NULL;
     while (p != NULL)
     {
         Node *def = p->children[0];
@@ -283,6 +284,7 @@ FieldList DefList(Node *p, int struct_def)
             if (declist->children[0]->child_num == 1)
             {
                 FieldList f = VarDec(declist->children[0]->children[0], def_t, struct_def);
+                printf("%s\n",f->name);
                 if (f != NULL)
                 {
                     if (struct_def == 1 && Struct_Def_exist(ret, f->name) == 1)
@@ -293,8 +295,8 @@ FieldList DefList(Node *p, int struct_def)
                     else
                     {
                         //insert into fieldlist
-                        
-                        if ( NULL==ret)
+
+                        if (NULL == ret)
                         {
                             ret = f;
                             cur = ret;
@@ -361,6 +363,11 @@ FieldList DefList(Node *p, int struct_def)
 
 Type Exp(Node *p)
 {
+    fprintf(stderr,"%s\n",p->children[0]->children[0]->char_val);
+    fprintf(stderr,"%s---%s\n",p->children[0]->children[0]->char_val,p->children[2]->children[0]->char_val);
+    FieldList f1 = find(p->children[0]->children[0]->char_val,0);
+    FieldList f2 = find(p->children[2]->children[0]->char_val,0);
+    fprintf(stderr,"%d\n",Type_Check(f1->type, f2->type));
     return NULL;
 }
 
@@ -368,6 +375,49 @@ int Type_Check(Type t1, Type t2)
 {
     //equal 1
     //neq 0
+            
+    if (NULL == t1 || NULL == t2)
+        return 0;
+    if (t1->kind != t2->kind)
+        return 0;
+    FieldList f1 = NULL;
+    FieldList f2 = NULL;
+    switch (t1->kind)
+    {
+    case BASIC:
+        if (t1->u.basic == t2->u.basic)
+        {
+            return 1;
+        }
+        break;
+    case ARRAY:
+        return Type_Check(t1->u.array.elem, t2->u.array.elem);
+        break;
+    case STRUCTURE:
+        f1 = t1->u.structure;
+        f2 = t2->u.structure;
+        while (f1 != NULL && f2 != NULL)
+        {
+            printf("%d--%d\n",f1->type->kind, f2->type->kind);
+            if (Type_Check(f1->type, f2->type) == 0)
+            {
+                return 0;
+            }
+            f1 = f1->tail;
+            f2 = f2->tail;
+        }
+        if (NULL == f1 && NULL == f2)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+        break;
+    default:
+        break;
+    }
     return 0;
 }
 
