@@ -19,15 +19,21 @@ unsigned int hash_bkdr(char* name)
     return hash%32767;
 }
 
-FieldList find(char* name)
+FieldList find(char* name, int function_find)
 {
+    //function_find
+    //1: compare name with function name
+    //0: compare name with var or struct
     unsigned int key = hash_bkdr(name)%TAB_SIZE;
     FieldList p = symbol_tab[key];
     while(p!=NULL)
     {
         if(strcmp(p->name, name)==0)
         {
-            return p;
+            if(function_find==1&&p->type->kind==FUNCTION)
+                return p;
+            else if(function_find == 0&&p->type->kind!=FUNCTION)
+                return p;
         }
         p = p->tail;
     }
@@ -38,7 +44,8 @@ FieldList insert(char* name, Type type)
 {
     unsigned int key = hash_bkdr(name)%TAB_SIZE;
     FieldList p = (FieldList)malloc(sizeof(struct FieldList_));
-    p->name = name;
+    //p->name = name;
+    strncpy(p->name,name,NAME_LEN);
     p->type =type;
     p->tail = NULL;
     if(symbol_tab[key]==NULL)
