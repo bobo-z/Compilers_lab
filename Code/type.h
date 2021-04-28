@@ -6,7 +6,7 @@ typedef struct FieldList_* FieldList;
 #define BASIC_FLOAT 2
 struct Type_
 {
-    enum { BASIC, ARRAY, STRUCTURE, FUNCTION } kind;
+    enum { BASIC, ARRAY, STRUCTURE, FUNCTION , STR_DEF} kind;
     union
     {
         int basic;

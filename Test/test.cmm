@@ -1,5 +1,158 @@
-int main()
-{
-    int i;
-    j;
+struct A0{
+  int x;
+};
+struct A1{
+	struct A0 v0, v1;
+};
+struct A2{
+	struct A1 v0, v1;
+};
+struct A3{
+	struct A2 v0, v1;
+};
+struct A4{
+	struct A3 v0, v1;
+};
+struct A5{
+	struct A4 v0, v1;
+};
+struct A6{
+	struct A5 v0, v1;
+};
+struct A7{
+	struct A6 v0, v1;
+};
+struct A8{
+	struct A7 v0, v1;
+};
+struct A9{
+	struct A8 v0, v1;
+};
+struct A10{
+	struct A9 v0, v1;
+};
+struct A11{
+	struct A10 v0, v1;
+};
+struct A12{
+	struct A11 v0, v1;
+};
+struct A13{
+	struct A12 v0, v1;
+};
+struct A14{
+	struct A13 v0, v1;
+};
+struct A15{
+	struct A14 v0, v1;
+};
+struct A16{
+	struct A15 v0, v1;
+};
+struct A17{
+	struct A16 v0, v1;
+};
+struct A18{
+	struct A17 v0, v1;
+};
+struct A19{
+	struct A18 v0, v1;
+};
+struct A20{
+	struct A19 v0, v1;
+};
+
+struct B0{
+  int y;
+};
+struct B1{
+	struct B0 w0, w1;
+};
+struct B2{
+	struct B1 w0, w1;
+};
+struct B3{
+	struct B2 w0, w1;
+};
+struct B4{
+	struct B3 w0, w1;
+};
+struct B5{
+	struct B4 w0, w1;
+};
+struct B6{
+	struct B5 w0, w1;
+};
+struct B7{
+	struct B6 w0, w1;
+};
+struct B8{
+	struct B7 w0, w1;
+};
+struct B9{
+	struct B8 w0, w1;
+};
+struct B10{
+	struct B9 w0, w1;
+};
+
+
+int mian(){
+  struct A19 a299;
+  struct B10 b299;
+
+  struct A10 a210, a210r[100][10], a210y;
+  struct B5 b210, b210r[1000];
+
+  a299 = b299;
+  a299 = a210;
+  a299 = a210r;
+  a299 = a210r[3];
+  a299 = a210r[8][3];
+  a299 = a210y;
+  a299 = b210;
+  a299 = b210r;
+  a299 = b210r[3];
+
+  b299 = a210;
+  b299 = a210r;
+  b299 = a210r[3];
+  b299 = a210r[8][3];
+  b299 = a210y;
+  b299 = b210;
+  b299 = b210r;
+  b299 = b210r[3];
+
+  a210 = a210r;
+  a210 = a210r[3];
+  a210 = a210r[8][3];
+  a210 = a210y;
+  a210 = b210;
+  a210 = b210r;
+  a210 = b210r[3];
+
+  a210r = a210r[3];
+  a210r = a210r[8][3];
+  a210r = a210y;
+  a210r = b210;
+  a210r = b210r;
+  a210r = b210r[3];
+
+  a210r[3] = a210r[8][3];
+  a210r[3] = a210y;
+  a210r[3] = b210;
+  a210r[3] = b210r;
+  a210r[3] = b210r[3];
+
+  a210r[8][3] = a210y;
+  a210r[8][3] = b210;
+  a210r[8][3] = b210r;
+  a210r[8][3] = b210r[3];
+
+  a210y = b210;
+  a210y = b210r;
+  a210y = b210r[3];
+
+  b210 = b210r;
+  b210 = b210r[3];
 }

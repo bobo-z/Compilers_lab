@@ -62,11 +62,12 @@ Type Specifer(Node *p)
             if (f != NULL)
             {
                 t = f->type;
+                t->kind = STRUCTURE;
             }
             else
             {
                 //TODO: error 17
-                fprintf(stderr, "Error type 17 at line %d: Undefined struct \"%s\".\n", p_struct->children[1]->lineno, p_struct->children[1]->children[0]->char_val);
+                fprintf(stderr, "Error type 17 at Line %d: Undefined struct \"%s\".\n", p_struct->children[1]->lineno, p_struct->children[1]->children[0]->char_val);
             }
         }
         else
@@ -83,17 +84,22 @@ Type Specifer(Node *p)
             {
                 strncpy(name, p_struct->children[1]->children[0]->char_val, NAME_LEN);
             }
+
+            //printf("%s\n", name);
+            t = (Type)malloc(sizeof(struct Type_));
+            t->kind = STRUCTURE;
+            t->u.structure = DefList(p_struct->children[3], 1);
+            Type tmp = (Type)malloc(sizeof(struct Type_));
+            tmp->kind = STR_DEF;
+            tmp->u.structure = t->u.structure;
             if (find(name, 0) == NULL)
             {
-                t = (Type)malloc(sizeof(struct Type_));
-                t->kind = STRUCTURE;
-                t->u.structure = DefList(p_struct->children[3], 1);
-                insert(name, t);
+                insert(name, tmp);
             }
             else
             {
                 //TODO:error 16
-                fprintf(stderr, "Error type 16 at line %d: Duplicated name \"%s\".\n", p_struct->children[0]->lineno, name);
+                fprintf(stderr, "Error type 16 at Line %d: Duplicated name \"%s\".\n", p_struct->children[0]->lineno, name);
             }
         }
     }
@@ -142,7 +148,7 @@ FieldList VarDec(Node *p, Type t, int struct_def)
         else
         {
             //TODO: error 3
-            fprintf(stderr, "Error type 3 at line %d: Redefined variable \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
+            fprintf(stderr, "Error type 3 at Line %d: Redefined variable \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
         }
     }
     else
@@ -162,7 +168,7 @@ void FunDec(Node *p, Type t)
     if (find(p->children[0]->char_val, 1) != NULL)
     {
         //error 4
-        fprintf(stderr, "Error type 4 at line %d: Redefined function \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
+        fprintf(stderr, "Error type 4 at Line %d: Redefined function \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
         return;
     }
     Type fun_t = (Type)malloc(sizeof(struct Type_));
@@ -251,18 +257,20 @@ void Stmt(Node *p, Type ret)
         }
         */
         exp_t = Exp(p->children[2]);
-        if (exp_t->kind != BASIC_INT)
+        if (exp_t != NULL&&(exp_t->kind != BASIC||exp_t->u.basic!=BASIC_INT))
         {
-            //TODO:error
+            //TODO:error 7
+            fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->children[0]->lineno);
         }
         Stmt(p->children[4], ret);
         break;
     case 7:
         //IF LP Exp RP Stmt ELSE Stmt
         exp_t = Exp(p->children[2]);
-        if (exp_t->kind != BASIC_INT)
+        if (exp_t != NULL&&(exp_t->kind != BASIC||exp_t->u.basic!=BASIC_INT))
         {
-            //TODO:error
+            //TODO:error 7
+            fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->children[0]->lineno);
         }
         Stmt(p->children[4], ret);
         Stmt(p->children[6], ret);
@@ -282,6 +290,8 @@ FieldList DefList(Node *p, int struct_def)
         Node *declist = def->children[1];
         while (1)
         {
+            if (def_t == NULL)
+                break;
             if (declist->children[0]->child_num == 1)
             {
                 FieldList f = VarDec(declist->children[0]->children[0], def_t, struct_def);
@@ -290,7 +300,7 @@ FieldList DefList(Node *p, int struct_def)
                     if (struct_def == 1 && Struct_Def_exist(ret, f->name) == 1)
                     {
                         //TODO:error 15
-                        fprintf(stderr, "Error type 15 at line %d: Redefined field \"%s\".\n", declist->children[0]->lineno, f->name);
+                        fprintf(stderr, "Error type 15 at Line %d: Redefined field \"%s\".\n", declist->children[0]->lineno, f->name);
                     }
                     else
                     {
@@ -315,7 +325,7 @@ FieldList DefList(Node *p, int struct_def)
                 if (struct_def == 1)
                 {
                     //TODO:error 15
-                    fprintf(stderr, "Error type 15 at line %d: Can not initialize fields.\n", declist->children[0]->lineno);
+                    fprintf(stderr, "Error type 15 at Line %d: Can not initialize fields.\n", declist->children[0]->lineno);
                 }
                 else
                 {
@@ -341,7 +351,7 @@ FieldList DefList(Node *p, int struct_def)
                             else
                             {
                                 //error 5
-                                fprintf(stderr, "Error type 5 at line %d: Type mismatched for assignment.\n", declist->children[0]->children[1]->lineno);
+                                fprintf(stderr, "Error type 5 at Line %d: Type mismatched for assignment.\n", declist->children[0]->children[1]->lineno);
                             }
                         }
                     }
@@ -385,10 +395,10 @@ Type Exp(Node *p)
         else
         {
             tmp = find(p->children[0]->char_val, 0);
-            if (NULL == tmp)
+            if (NULL == tmp||tmp->type->kind==STR_DEF)
             {
                 //error 1
-                fprintf(stderr, "Error type 1 at line %d: Undefined variable \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
+                fprintf(stderr, "Error type 1 at Line %d: Undefined variable \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
             }
             else
             {
@@ -439,7 +449,7 @@ Type Exp(Node *p)
             }
             t = Exp(p->children[0]);
             tmp_t = Exp(p->children[2]);
-            if(t==NULL||tmp_t==NULL)
+            if (t == NULL || tmp_t == NULL)
                 return NULL;
             if (Type_Check(t, tmp_t) == 0)
             {
@@ -453,16 +463,17 @@ Type Exp(Node *p)
             //logic
             t = Exp(p->children[0]);
             tmp_t = Exp(p->children[2]);
-            if(t==NULL||tmp_t==NULL)
+            if (t == NULL || tmp_t == NULL)
                 return NULL;
             if (t->kind == BASIC && t->u.basic == BASIC_INT)
             {
-                if (1 == Type_Check(t, Exp(p->children[2])))
+                if (1 == Type_Check(t, tmp_t))
                 {
                     return t;
                 }
             }
             //error 7
+            //fprintf(stderr, "here!\n");
             fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->lineno);
             return NULL;
         }
@@ -471,11 +482,11 @@ Type Exp(Node *p)
             //arth
             t = Exp(p->children[0]);
             tmp_t = Exp(p->children[2]);
-            if(t==NULL||tmp_t == NULL)
+            if (t == NULL || tmp_t == NULL)
                 return NULL;
-            if (t->kind == BASIC&&tmp_t->kind==BASIC)
+            if (t->kind == BASIC && tmp_t->kind == BASIC)
             {
-                if (t->u.basic==tmp_t->u.basic)
+                if (t->u.basic == tmp_t->u.basic)
                 {
                     return t;
                 }
@@ -488,7 +499,7 @@ Type Exp(Node *p)
         {
             //Exp DOT ID
             t = Exp(p->children[0]);
-            if(t==NULL)
+            if (t == NULL)
                 return NULL;
             if (t->kind != STRUCTURE)
             {
@@ -569,7 +580,7 @@ Type Exp(Node *p)
             }
             else
             {
-                if(0==Args(p->children[2],tmp->type->u.function.param))
+                if (0 == Args(p->children[2], tmp->type->u.function.param))
                 {
                     //error 9
                     fprintf(stderr, "Error type 9 at Line %d: Function arguments error.\n", p->lineno);
@@ -583,20 +594,61 @@ Type Exp(Node *p)
         }
         else
         {
-            //Exp LB Exp RB array
+            //Exp LB Exp RB
             //a[10][3][2]
+            /*
+            //error 10
+                fprintf(stderr,"Error type 10 at Line %d: invalid use of \"[]\" to non-array variable.\n", p->lineno);
+            //error 12
+                fprintf(stderr, "Error type 12 at Line %d: array index must be integer.\n",p->lineno);
+            */
             t = Exp(p->children[0]);
-            if(t->kind!=ARRAY)
+            if (t == NULL)
+                return NULL;
+            if (t->kind != ARRAY)
             {
                 //error 10
-                fprintf(stderr,"Error type 10 at Line %d: invalid use of \"[]\" to non-array variable.\n", p->lineno);
+                fprintf(stderr, "Error type 10 at Line %d: invalid use of \"[]\" to non-array variable.\n", p->lineno);
+                return NULL;
             }
+
+            tmp_t = Exp(p->children[2]);
+            if (tmp_t->kind != BASIC || tmp_t->u.basic != BASIC_INT)
+            {
+                //error 12
+                fprintf(stderr, "Error type 12 at Line %d: array index must be integer.\n", p->lineno);
+                return NULL;
+            }
+            t = t->u.array.elem;
+            return t;
         }
         break;
     default:
         break;
     }
     return t;
+}
+
+Type Array_type(Node *p)
+{
+    //Exp: Exp LB Exp RB
+    Type t = NULL;
+    Node *exp1 = p->children[0];
+    while (1)
+    {
+        if (exp1->child_num == 1)
+        {
+            //ID
+            t = Exp(exp1->children[0]);
+            if (t->kind != ARRAY)
+            {
+            }
+        }
+        else if (exp1->child_num == 4)
+        {
+            //Exp LB Exp RB
+        }
+    }
 }
 
 int Args(Node *p, FieldList f)

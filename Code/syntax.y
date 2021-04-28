@@ -75,6 +75,9 @@ ExtDef: Specifier ExtDecList SEMI{
         $$ = InitNode("ExtDef", @$.first_line, SYNTAX_UNIT);
         AddChild($$,3,$1,$2,$3);
     }
+    |Specifier FunDec SEMI{
+        yyerror("Inconsistent declaration of function");
+    }
     | error SEMI{
         yyerrok;
     }
