@@ -365,27 +365,28 @@ Type Exp(Node *p)
 {
     Type t = NULL;
     FieldList tmp = NULL;
+    char name[NAME_LEN];
     switch (p->child_num)
     {
     case 1:
-        if(INT_UNIT == p->children[0]->type)
-        {   
+        if (INT_UNIT == p->children[0]->type)
+        {
             t = (Type)malloc(sizeof(struct Type_));
             t->kind = BASIC;
             t->u.basic = BASIC_INT;
         }
-        else if(FLOAT_UNIT == p->children[0]->type )
+        else if (FLOAT_UNIT == p->children[0]->type)
         {
-            t = (Type)malloc(sizeof( struct Type_));
+            t = (Type)malloc(sizeof(struct Type_));
             t->kind = BASIC;
             t->u.basic = BASIC_FLOAT;
         }
         else
         {
             tmp = find(p->children[0]->char_val, 0);
-            if(NULL == tmp)
+            if (NULL == tmp)
             {
-                //error 1 
+                //error 1
                 fprintf(stderr, "Error type 1 at line %d: Undefined variable \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
             }
             else
@@ -394,18 +395,245 @@ Type Exp(Node *p)
             }
         }
         break;
-    
+    case 2:
+        if (0 == strcmp(p->children[0]->name, "NOT"))
+        {
+            //NOT Exp
+            t = Exp(p->children[1]);
+            if (t != NULL)
+            {
+                if (t->kind != BASIC || t->u.basic != BASIC_INT)
+                {
+                    //error 7
+                    t = NULL;
+                    fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->children[0]->lineno);
+                }
+            }
+        }
+        else
+        {
+            //MINUS Exp
+            t = Exp(p->children[1]);
+            if (t != NULL)
+            {
+                if (t->kind != BASIC)
+                {
+                    t = NULL;
+                    fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->children[0]->lineno);
+                }
+            }
+        }
+        break;
+    case 3:
+        strncpy(name, p->children[1]->name, NAME_LEN);
+        if (0 == strcmp(name, "ASSIGNOP"))
+        {
+            //Exp: Exp ASSIGNOP Exp
+            //check left value
+            if (left_hand_check(p->children[0]) == 0)
+            {
+                //error 6
+                fprintf(stderr, "Error type 6 at Line %d: The left-hand side of an assignment must be a varia-ble.\n", p->lineno);
+                return NULL;
+            }
+            t = Exp(p->children[0]);
+            if (Type_Check(t, Exp(p->children[2])) == 0)
+            {
+                //error 5
+                fprintf(stderr, "Error type 5 at Line %d: Type mismatched for assignment.\n", p->lineno);
+                t = NULL;
+            }
+        }
+        else if (0 == strcmp(name, "AND") || 0 == strcmp(name, "OR") || 0 == strcmp(name, "RELOP"))
+        {
+            //logic
+            t = Exp(p->children[0]);
+            if (t->kind == BASIC && t->u.basic == BASIC_INT)
+            {
+                if (1 == Type_Check(t, Exp(p->children[2])))
+                {
+                    return t;
+                }
+            }
+            //error 7
+            fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->lineno);
+            return NULL;
+        }
+        else if (0 == strcmp(name, "PLUS") || 0 == strcmp(name, "MINUS") || 0 == strcmp(name, "STAR") || 0 == strcmp(name, "DIV"))
+        {
+            //arth
+            t = Exp(p->children[0]);
+            if (t->kind == BASIC)
+            {
+                t = Exp(p->children[2]);
+                if (t->kind == BASIC)
+                {
+                    t->u.basic = BASIC_FLOAT;
+                    return t;
+                }
+            }
+            //error 7
+            fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->lineno);
+            return NULL;
+        }
+        else if (0 == strcmp(name, "DOT"))
+        {
+            //Exp DOT ID
+            t = Exp(p->children[0]);
+            if (t->kind != STRUCTURE)
+            {
+                //error 13
+                fprintf(stderr, "Error type 13 at Line %d: Illegal use of \".\".\n", p->lineno);
+                return NULL;
+            }
+            tmp = t->u.structure;
+            while (tmp != NULL)
+            {
+                if (0 == strcmp(p->children[2]->char_val, tmp->name))
+                {
+                    return tmp->type;
+                }
+                tmp = tmp->tail;
+            }
+            //error 14
+            fprintf(stderr, "Error type 14 at Line %d: Non-existent field \"%s\".\n", p->lineno, p->children[2]->char_val);
+            return NULL;
+        }
+        else if (0 == strcmp(name, "Exp"))
+        {
+            //LP Exp RP
+            t = Exp(p->children[1]);
+        }
+        else
+        {
+            //ID LP RP
+            tmp = find(p->children[0]->char_val, 1);
+            if (NULL == tmp)
+            {
+                tmp = find(p->children[0]->char_val, 0);
+                if (NULL == tmp)
+                {
+                    //error 2
+                    fprintf(stderr, "Error type 2 at Line %d: Undefined function \"%s\".\n", p->lineno, p->children[0]->char_val);
+                }
+                else
+                {
+                    //error 11
+                    fprintf(stderr, "Error type 11 at Line %d: \"%s\" is not a function.\n", p->lineno, p->children[0]->char_val);
+                }
+                return NULL;
+            }
+            else
+            {
+                t = tmp->type;
+                if (NULL != t->u.function.param)
+                {
+                    //error 9
+                    fprintf(stderr, "Error type 9 at Line %d: Function arguments error.\n", p->lineno);
+                    return NULL;
+                }
+            }
+            return tmp->type->u.function.ret;
+        }
+        break;
+    case 4:
+        strncpy(name, p->children[0]->name, NAME_LEN);
+        if (0 == strcmp(name, "ID"))
+        {
+            //ID LP Args RP
+            tmp = find(p->children[0]->char_val, 1);
+            if (NULL == tmp)
+            {
+                tmp = find(p->children[0]->char_val, 0);
+                if (NULL == tmp)
+                {
+                    //error 2
+                    fprintf(stderr, "Error type 2 at Line %d: Undefined function \"%s\".\n", p->lineno, p->children[0]->char_val);
+                }
+                else
+                {
+                    //error 11
+                    fprintf(stderr, "Error type 11 at Line %d: \"%s\" is not a function.\n", p->lineno, p->children[0]->char_val);
+                }
+                return NULL;
+            }
+            else
+            {
+                if(0==Args(p->children[2],tmp->type->u.function.param))
+                {
+                    //error 9
+                    fprintf(stderr, "Error type 9 at Line %d: Function arguments error.\n", p->lineno);
+                    return NULL;
+                }
+                else
+                {
+                    return tmp->type->u.function.ret;
+                }
+            }
+        }
+        else
+        {
+            //Exp LB Exp RB array
+            //a[10][3][2]
+            t = Exp(p->children[0]);
+            if(t->kind!=ARRAY)
+            {
+                //error 10
+                fprintf(stderr,"Error type 10 at Line %d: invalid use of \"[]\" to non-array variable.\n", p->lineno);
+            }
+        }
+        break;
     default:
         break;
     }
-    return NULL;
+    return t;
+}
+
+int Args(Node *p, FieldList f)
+{
+    //equal 1
+    //neq 0
+    Type t1 = NULL;
+    Type t2 = NULL;
+    if (f == NULL)
+        return 0;
+    while (1)
+    {
+        t1 = Exp(p->children[0]);
+        t2 = f->type;
+        if (0 == Type_Check(t1, t2))
+        {
+            return 0;
+        }
+        f = f->tail;
+        if (NULL == f)
+        {
+            if (p->child_num == 1)
+            {
+                return 1;
+            }
+            break;
+        }
+        else
+        {
+            if (p->child_num == 1)
+            {
+                break;
+            }
+            else
+            {
+                p = p->children[2];
+            }
+        }
+    }
+    return 0;
 }
 
 int Type_Check(Type t1, Type t2)
 {
     //equal 1
     //neq 0
-            
+
     if (NULL == t1 || NULL == t2)
         return 0;
     if (t1->kind != t2->kind)
@@ -457,6 +685,38 @@ int Struct_Def_exist(FieldList f, char *name)
         if (strcmp(f->name, name) == 0)
             return 1;
         f = f->tail;
+    }
+    return 0;
+}
+
+int left_hand_check(Node *p)
+{
+    //check the assignment on the left-hand
+    //good 1
+    //bad 0
+    //Exp p
+
+    if (p->child_num == 1)
+    {
+        //ID
+        if (0 == strcmp(p->children[0]->name, "ID"))
+        {
+            return 1;
+        }
+    }
+    else if (p->child_num == 3)
+    {
+        if (0 == strcmp(p->children[0]->name, "Exp") && 0 == strcmp(p->children[1]->name, "DOT") && 0 == strcmp(p->children[2]->name, "ID"))
+        {
+            return 1;
+        }
+    }
+    else if (p->child_num == 4)
+    {
+        if (0 == strcmp(p->children[0]->name, "Exp") && 0 == strcmp(p->children[1]->name, "LB") && 0 == strcmp(p->children[2]->name, "Exp") && 0 == strcmp(p->children[3]->name, "RB"))
+        {
+            return 1;
+        }
     }
     return 0;
 }

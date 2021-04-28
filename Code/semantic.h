@@ -13,7 +13,9 @@ void CompSt(Node* p, Type ret);
 void Stmt(Node* p, Type ret);
 FieldList DefList(Node *p, int struct_def);
 Type Exp(Node *p);
+int Args(Node *p,FieldList f);
 int Type_Check(Type t1, Type t2);
 int Struct_Def_exist(FieldList f, char* name);
+int left_hand_check(Node* p);
 
 #endif
