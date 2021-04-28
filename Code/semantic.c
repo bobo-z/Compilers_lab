@@ -364,6 +364,7 @@ FieldList DefList(Node *p, int struct_def)
 Type Exp(Node *p)
 {
     Type t = NULL;
+    Type tmp_t = NULL;
     FieldList tmp = NULL;
     char name[NAME_LEN];
     switch (p->child_num)
@@ -437,7 +438,10 @@ Type Exp(Node *p)
                 return NULL;
             }
             t = Exp(p->children[0]);
-            if (Type_Check(t, Exp(p->children[2])) == 0)
+            tmp_t = Exp(p->children[2]);
+            if(t==NULL||tmp_t==NULL)
+                return NULL;
+            if (Type_Check(t, tmp_t) == 0)
             {
                 //error 5
                 fprintf(stderr, "Error type 5 at Line %d: Type mismatched for assignment.\n", p->lineno);
@@ -448,6 +452,9 @@ Type Exp(Node *p)
         {
             //logic
             t = Exp(p->children[0]);
+            tmp_t = Exp(p->children[2]);
+            if(t==NULL||tmp_t==NULL)
+                return NULL;
             if (t->kind == BASIC && t->u.basic == BASIC_INT)
             {
                 if (1 == Type_Check(t, Exp(p->children[2])))
@@ -463,12 +470,13 @@ Type Exp(Node *p)
         {
             //arth
             t = Exp(p->children[0]);
-            if (t->kind == BASIC)
+            tmp_t = Exp(p->children[2]);
+            if(t==NULL||tmp_t == NULL)
+                return NULL;
+            if (t->kind == BASIC&&tmp_t->kind==BASIC)
             {
-                t = Exp(p->children[2]);
-                if (t->kind == BASIC)
+                if (t->u.basic==tmp_t->u.basic)
                 {
-                    t->u.basic = BASIC_FLOAT;
                     return t;
                 }
             }
@@ -480,6 +488,8 @@ Type Exp(Node *p)
         {
             //Exp DOT ID
             t = Exp(p->children[0]);
+            if(t==NULL)
+                return NULL;
             if (t->kind != STRUCTURE)
             {
                 //error 13
