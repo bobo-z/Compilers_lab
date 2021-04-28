@@ -26,7 +26,8 @@ void ExtDef(Node *p)
     if (p->child_num == 2)
     {
         //ExtDef: Specifer SEMI
-        Specifer(p->children[0]);
+        Type t = Specifer(p->children[0]);
+        //insert(p->children[0],t);
     }
     else if (strcmp(p->children[2]->name, "SEMI") == 0)
     {
@@ -284,7 +285,6 @@ FieldList DefList(Node *p, int struct_def)
             if (declist->children[0]->child_num == 1)
             {
                 FieldList f = VarDec(declist->children[0]->children[0], def_t, struct_def);
-                printf("%s\n",f->name);
                 if (f != NULL)
                 {
                     if (struct_def == 1 && Struct_Def_exist(ret, f->name) == 1)
@@ -363,11 +363,41 @@ FieldList DefList(Node *p, int struct_def)
 
 Type Exp(Node *p)
 {
-    fprintf(stderr,"%s\n",p->children[0]->children[0]->char_val);
-    fprintf(stderr,"%s---%s\n",p->children[0]->children[0]->char_val,p->children[2]->children[0]->char_val);
-    FieldList f1 = find(p->children[0]->children[0]->char_val,0);
-    FieldList f2 = find(p->children[2]->children[0]->char_val,0);
-    fprintf(stderr,"%d\n",Type_Check(f1->type, f2->type));
+    Type t = NULL;
+    FieldList tmp = NULL;
+    switch (p->child_num)
+    {
+    case 1:
+        if(INT_UNIT == p->children[0]->type)
+        {   
+            t = (Type)malloc(sizeof(struct Type_));
+            t->kind = BASIC;
+            t->u.basic = BASIC_INT;
+        }
+        else if(FLOAT_UNIT == p->children[0]->type )
+        {
+            t = (Type)malloc(sizeof( struct Type_));
+            t->kind = BASIC;
+            t->u.basic = BASIC_FLOAT;
+        }
+        else
+        {
+            tmp = find(p->children[0]->char_val, 0);
+            if(NULL == tmp)
+            {
+                //error 1 
+                fprintf(stderr, "Error type 1 at line %d: Undefined variable \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
+            }
+            else
+            {
+                t = tmp->type;
+            }
+        }
+        break;
+    
+    default:
+        break;
+    }
     return NULL;
 }
 
@@ -398,7 +428,6 @@ int Type_Check(Type t1, Type t2)
         f2 = t2->u.structure;
         while (f1 != NULL && f2 != NULL)
         {
-            printf("%d--%d\n",f1->type->kind, f2->type->kind);
             if (Type_Check(f1->type, f2->type) == 0)
             {
                 return 0;

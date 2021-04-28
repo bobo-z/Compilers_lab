@@ -1,28 +1,5 @@
-struct A
-{
-    int a;
-    struct 
-    {
-        int i;
-        float j;
-    }b[10];
-};
-
-struct B
-{
-    int c;
-    struct
-    {
-        int i;
-        float f;
-    }b[10];
-};
-
-
-
 int main()
 {
-    struct A a;
-    struct B b;
-    a = b;
+    int i;
+    j;
 }
