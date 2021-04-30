@@ -1,8 +1,10 @@
 #ifndef SEMANTIC_H_
 #define SEMANTIC_H_
 #include "common.h"
-
+//main entry
 void semantic(Node* p);
+
+//different not-terminal, different situation
 void ExtDefList(Node* p);
 void ExtDef(Node* p);
 Type Specifer(Node* p);
@@ -13,8 +15,9 @@ void CompSt(Node* p, Type ret);
 void Stmt(Node* p, Type ret);
 FieldList DefList(Node *p, int struct_def);
 Type Exp(Node *p);
-Type Array_type(Node* p);
 int Args(Node *p,FieldList f);
+
+//help function
 int Type_Check(Type t1, Type t2);
 int Struct_Def_exist(FieldList f, char* name);
 int left_hand_check(Node* p);

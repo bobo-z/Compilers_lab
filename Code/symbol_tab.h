@@ -9,7 +9,6 @@
 void init();
 FieldList insert(char* name, Type type);
 FieldList find(char* name, int function_find);
-FieldList struct_find(char* name, Type type);
 unsigned int hash_pjw(char* name);
 
 

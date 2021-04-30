@@ -629,28 +629,6 @@ Type Exp(Node *p)
     return t;
 }
 
-Type Array_type(Node *p)
-{
-    //Exp: Exp LB Exp RB
-    Type t = NULL;
-    Node *exp1 = p->children[0];
-    while (1)
-    {
-        if (exp1->child_num == 1)
-        {
-            //ID
-            t = Exp(exp1->children[0]);
-            if (t->kind != ARRAY)
-            {
-            }
-        }
-        else if (exp1->child_num == 4)
-        {
-            //Exp LB Exp RB
-        }
-    }
-}
-
 int Args(Node *p, FieldList f)
 {
     //equal 1
