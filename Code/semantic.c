@@ -1,5 +1,6 @@
 #include "semantic.h"
 int annoy_struct_num = 0;
+int redefined_func = 0;
 //TODO: struct defined in a struct should not add
 void semantic(Node *p)
 {
@@ -165,12 +166,16 @@ FieldList VarDec(Node *p, Type t, int struct_def)
 
 void FunDec(Node *p, Type t)
 {
+    char name[NAME_LEN];
     if (find(p->children[0]->char_val, 1) != NULL)
     {
         //error 4
         fprintf(stderr, "Error type 4 at Line %d: Redefined function \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
-        return;
+        sprintf(name, "Struct_%d", redefined_func);
+        redefined_func++;
     }
+    else
+        strncpy(name, p->children[0]->char_val, NAME_LEN);
     Type fun_t = (Type)malloc(sizeof(struct Type_));
     fun_t->kind = FUNCTION;
     fun_t->u.function.ret = t;
@@ -205,7 +210,7 @@ void FunDec(Node *p, Type t)
             }
         }
     }
-    insert(p->children[0]->char_val, fun_t);
+    insert(name, fun_t);
 }
 
 void CompSt(Node *p, Type ret)
@@ -257,7 +262,7 @@ void Stmt(Node *p, Type ret)
         }
         */
         exp_t = Exp(p->children[2]);
-        if (exp_t != NULL&&(exp_t->kind != BASIC||exp_t->u.basic!=BASIC_INT))
+        if (exp_t != NULL && (exp_t->kind != BASIC || exp_t->u.basic != BASIC_INT))
         {
             //TODO:error 7
             fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->children[0]->lineno);
@@ -267,7 +272,7 @@ void Stmt(Node *p, Type ret)
     case 7:
         //IF LP Exp RP Stmt ELSE Stmt
         exp_t = Exp(p->children[2]);
-        if (exp_t != NULL&&(exp_t->kind != BASIC||exp_t->u.basic!=BASIC_INT))
+        if (exp_t != NULL && (exp_t->kind != BASIC || exp_t->u.basic != BASIC_INT))
         {
             //TODO:error 7
             fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->children[0]->lineno);
@@ -327,32 +332,30 @@ FieldList DefList(Node *p, int struct_def)
                     //TODO:error 15
                     fprintf(stderr, "Error type 15 at Line %d: Can not initialize fields.\n", declist->children[0]->lineno);
                 }
-                else
+
+                Type exp_t = Exp(declist->children[0]->children[2]);
+                if (exp_t != NULL)
                 {
-                    Type exp_t = Exp(declist->children[0]->children[2]);
-                    if (exp_t != NULL)
+                    FieldList f = VarDec(declist->children[0]->children[0], def_t, 0);
+                    if (f != NULL)
                     {
-                        FieldList f = VarDec(declist->children[0]->children[0], def_t, 0);
-                        if (f != NULL)
+                        if (Type_Check(f->type, exp_t) == 1)
                         {
-                            if (Type_Check(f->type, exp_t) == 1)
+                            if (ret == NULL)
                             {
-                                if (ret == NULL)
-                                {
-                                    ret = f;
-                                    cur = ret;
-                                }
-                                else
-                                {
-                                    cur->tail = f;
-                                    cur = cur->tail;
-                                }
+                                ret = f;
+                                cur = ret;
                             }
                             else
                             {
-                                //error 5
-                                fprintf(stderr, "Error type 5 at Line %d: Type mismatched for assignment.\n", declist->children[0]->children[1]->lineno);
+                                cur->tail = f;
+                                cur = cur->tail;
                             }
+                        }
+                        else
+                        {
+                            //error 5
+                            fprintf(stderr, "Error type 5 at Line %d: Type mismatched for assignment.\n", declist->children[0]->children[1]->lineno);
                         }
                     }
                 }
@@ -395,7 +398,7 @@ Type Exp(Node *p)
         else
         {
             tmp = find(p->children[0]->char_val, 0);
-            if (NULL == tmp||tmp->type->kind==STR_DEF)
+            if (NULL == tmp || tmp->type->kind == STR_DEF)
             {
                 //error 1
                 fprintf(stderr, "Error type 1 at Line %d: Undefined variable \"%s\".\n", p->children[0]->lineno, p->children[0]->char_val);
@@ -458,7 +461,7 @@ Type Exp(Node *p)
                 t = NULL;
             }
         }
-        else if (0 == strcmp(name, "AND") || 0 == strcmp(name, "OR") || 0 == strcmp(name, "RELOP"))
+        else if (0 == strcmp(name, "AND") || 0 == strcmp(name, "OR"))
         {
             //logic
             t = Exp(p->children[0]);
@@ -477,7 +480,7 @@ Type Exp(Node *p)
             fprintf(stderr, "Error type 7 at Line %d: Type mismatched for operands.\n", p->lineno);
             return NULL;
         }
-        else if (0 == strcmp(name, "PLUS") || 0 == strcmp(name, "MINUS") || 0 == strcmp(name, "STAR") || 0 == strcmp(name, "DIV"))
+        else if (0 == strcmp(name, "PLUS") || 0 == strcmp(name, "MINUS") || 0 == strcmp(name, "STAR") || 0 == strcmp(name, "DIV")||0==strcmp(name, "RELOP"))
         {
             //arth
             t = Exp(p->children[0]);
