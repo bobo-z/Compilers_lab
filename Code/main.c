@@ -24,16 +24,4 @@ int main(int argc, char **argv)
         semantic(root);
     }
     return 0;
-    /*lex test
-    if (argc > 1)
-    {
-        if (!(yyin = fopen(argv[1], "r")))
-        {
-            perror(argv[1]);
-            return 1;
-        }
-    }
-    yylex();
-    return 0;
-    */
 }

@@ -11,5 +11,6 @@
 #include "type.h"
 #include "symbol_tab.h"
 #include "semantic.h"
+#include "intercodes.h"
 
 #endif
