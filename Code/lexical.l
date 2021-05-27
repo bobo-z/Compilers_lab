@@ -103,6 +103,7 @@ while {
 {relop} {
     /*printf("RELOP\n");*/
     yylval = InitNode("RELOP",yylineno,OTHER_UNIT);
+    strncpy(yylval->char_val, yytext, NAME_LEN);
     return RELOP;
 }
 "+" {
