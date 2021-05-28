@@ -4,4 +4,6 @@
 *.tab.h
 *.vscode
 *.output
+*.ir
+*.sh
 parser

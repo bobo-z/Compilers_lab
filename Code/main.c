@@ -6,9 +6,11 @@ extern int yydebug;
 extern int yyparse (void);
 extern void yyrestart (FILE *input_file  );
 
+//#define TEST
+
 void test()
 {
-
+    #ifdef TEST
     Operand main = new_tmp();
     code_insert(new_code(1,FUNCTION_IR,main));
     Operand t1 = new_tmp();
@@ -42,12 +44,18 @@ void test()
     code_insert(new_code(1, WRITE_IR, t6));
     code_insert(new_code(1, LABEL_IR, label3));
     code_insert(new_code(1, RETURN_IR, t2));
+    #endif
+
 }
 
 
 int main(int argc, char **argv)
 {
-   /* if (argc < 1)
+    #ifdef TEST
+    test();
+    code_print(argv[1]);
+    #else
+    if (argc < 1)
         return 1;
     FILE *f = fopen(argv[1], "r");
     if (!f)
@@ -56,15 +64,14 @@ int main(int argc, char **argv)
         return 1;
     }
     yyrestart(f);
-    //yydebug = 1;
     yyparse();
     if(!Error)
     {
         //PrintTree(root,0);
         semantic(root);
     }
-    fclose(f);*/
-    test();
-    code_print(argv[1]);
+    code_print(argv[2]);
+    fclose(f);
+    #endif
     return 0;
 }

@@ -50,6 +50,7 @@ struct Operand_
     {
         VARIABLE_OP,
         CONSTANT_OP,
+        FUNCTION_OP,
         ADDRESS_OP,
         MEMORY_OP,
         LABEL_OP,

@@ -12,5 +12,6 @@
 #include "symbol_tab.h"
 #include "semantic.h"
 #include "intercodes.h"
+#include "ir.h"
 
 #endif

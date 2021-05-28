@@ -11,8 +11,18 @@ Operand new_tmp()
     return op;
 }
 
-Operand new_const(int kind, int val)
+Operand new_char_op(int kind, char* name)
 {
+    //func or relop
+    Operand op = (Operand)malloc(sizeof(struct Operand_));
+    op->kind = kind;
+    strcpy(op->u.char_value,name);
+    return op;
+}
+
+Operand new_int_op(int kind, int val)
+{
+    //SIZE or CONSTANT INT
     Operand op = (Operand)malloc(sizeof(struct Operand_));
     op->kind = kind;
     op->u.int_value = val;
@@ -208,7 +218,7 @@ void operand_print(FILE* f, Operand op)
         case SIZE_OP:
             fprintf(f,"%d",op->u.int_value);
             break;
-        case RELOP_OP:
+        case RELOP_OP:case FUNCTION_OP:
             fputs(op->u.char_value, f);
             break;
         default:
