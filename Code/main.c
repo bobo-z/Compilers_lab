@@ -69,6 +69,7 @@ int main(int argc, char **argv)
     {
         //PrintTree(root,0);
         semantic(root);
+        ir(root);
     }
     code_print(argv[2]);
     fclose(f);

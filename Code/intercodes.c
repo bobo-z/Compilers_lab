@@ -7,6 +7,7 @@ Operand new_tmp()
     Operand op = (Operand)malloc(sizeof(struct Operand_));
     op->kind = VARIABLE_OP;
     op->u.int_value = tmp_count;
+    sprintf(op->u.char_value,"t%d",tmp_count);
     tmp_count++;
     return op;
 }
@@ -201,7 +202,7 @@ void operand_print(FILE* f, Operand op)
     switch(op->kind)
     {
         case VARIABLE_OP:
-            fprintf(f,"t%d",op->u.int_value);
+            fprintf(f,"%s",op->u.char_value);
             break;
         case CONSTANT_OP:
             fprintf(f,"#%d", op->u.int_value);

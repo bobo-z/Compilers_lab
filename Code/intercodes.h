@@ -11,7 +11,8 @@ struct InterCodes_
 
 
 Operand new_tmp();
-Operand new_const(int kind, int val);
+Operand new_int_op(int kind, int val);//const,size,address
+Operand new_char_op(int kind, char* name);
 Operand new_label();
 InterCode new_code(int num, int kind, ...);
 InterCodes code_insert(InterCode code);
