@@ -7,17 +7,17 @@ Operand new_tmp()
     Operand op = (Operand)malloc(sizeof(struct Operand_));
     op->kind = VARIABLE_OP;
     op->u.int_value = tmp_count;
-    sprintf(op->u.char_value,"t%d",tmp_count);
+    sprintf(op->u.char_value, "t%d", tmp_count);
     tmp_count++;
     return op;
 }
 
-Operand new_char_op(int kind, char* name)
+Operand new_char_op(int kind, char *name)
 {
     //func or relop
     Operand op = (Operand)malloc(sizeof(struct Operand_));
     op->kind = kind;
-    strcpy(op->u.char_value,name);
+    strcpy(op->u.char_value, name);
     return op;
 }
 
@@ -49,7 +49,7 @@ InterCode new_code(int num, int kind, ...)
     {
     case 1:
         //sinop
-        code->u.sinop.op = va_arg(vl,Operand);
+        code->u.sinop.op = va_arg(vl, Operand);
         break;
     case 2:
         //assign
@@ -81,7 +81,7 @@ InterCodes code_insert(InterCode code)
     i->code = code;
     i->prev = NULL;
     i->next = NULL;
-    if(code_root == NULL)
+    if (code_root == NULL)
     {
         code_root = i;
         code_tail = i;
@@ -95,38 +95,48 @@ InterCodes code_insert(InterCode code)
     return i;
 }
 
-InterCodes code_print(char* filename)
+InterCodes code_print(char *filename)
 {
-    FILE* f = fopen(filename, "w");
+    FILE *f = fopen(filename, "w");
+    if (f == NULL)
+    {
+        fprintf(stderr, "Output file open errpr\n");
+    }
     InterCodes cur = code_root;
     InterCode code = NULL;
-    while(cur!=NULL)
+    int i = 0;
+    while (cur != NULL)
     {
+        fprintf(stderr, "%d\n",i);
+        i++;
         code = cur->code;
         switch (code->kind)
         {
         case ASSIGN_IR:
             operand_print(f, code->u.assign.left);
-            fputs(" := ",f);
+            fputs(" := ", f);
             operand_print(f, code->u.assign.right);
             break;
-        case ADD_IR:case SUB_IR:case MUL_IR:case DIV_IR:
+        case ADD_IR:
+        case SUB_IR:
+        case MUL_IR:
+        case DIV_IR:
             operand_print(f, code->u.binop.result);
-            fputs(" := ",f);
+            fputs(" := ", f);
             operand_print(f, code->u.binop.op1);
             switch (code->kind)
             {
             case ADD_IR:
-                fputs(" + ",f);
+                fputs(" + ", f);
                 break;
             case SUB_IR:
-                fputs(" - ",f);
+                fputs(" - ", f);
                 break;
             case MUL_IR:
-                fputs(" * ",f);
+                fputs(" * ", f);
                 break;
             case DIV_IR:
-                fputs(" / ",f);
+                fputs(" / ", f);
                 break;
             default:
                 break;
@@ -134,96 +144,99 @@ InterCodes code_print(char* filename)
             operand_print(f, code->u.binop.op2);
             break;
         case LABEL_IR:
-            fputs("LABEL ",f);
+            fputs("LABEL ", f);
             operand_print(f, code->u.sinop.op);
-            fputs(" :",f);
+            fputs(" :", f);
             break;
         case FUNCTION_IR:
-            fputs("FUNCTION ",f);
-            operand_print(f,code->u.sinop.op);
-            fputs(" :",f);
+            fputs("FUNCTION ", f);
+            operand_print(f, code->u.sinop.op);
+            fputs(" :", f);
             break;
         case GOTO_IR:
-            fputs("GOTO ",f);
-            operand_print(f,code->u.sinop.op);
+            fputs("GOTO ", f);
+            operand_print(f, code->u.sinop.op);
             break;
         case RETURN_IR:
-            fputs("RETURN ",f);
-            operand_print(f,code->u.sinop.op);
+            fputs("RETURN ", f);
+            operand_print(f, code->u.sinop.op);
             break;
         case ARG_IR:
-            fputs("ARG ",f);
-            operand_print(f,code->u.sinop.op);
+            fprintf(stderr, "678\n");
+            fputs("ARG ", f);
+            operand_print(f, code->u.sinop.op);
             break;
         case PARAM_IR:
-            fputs("PARAM ",f);
-            operand_print(f,code->u.sinop.op);
+            fputs("PARAM ", f);
+            operand_print(f, code->u.sinop.op);
             break;
         case READ_IR:
-            fputs("READ ",f);
-            operand_print(f,code->u.sinop.op);
+            fputs("READ ", f);
+            operand_print(f, code->u.sinop.op);
             break;
         case WRITE_IR:
-            fputs("WRITE ",f);
-            operand_print(f,code->u.sinop.op);
+            fprintf(stderr, "69\n");
+            fputs("WRITE ", f);
+            operand_print(f, code->u.sinop.op);
             break;
         case IF_IR:
-            fputs("IF ",f);
-            operand_print(f,code->u.if_code.op1);
-            fputs(" ",f);
-            operand_print(f,code->u.if_code.relop);
-            fputs(" ",f);
-            operand_print(f,code->u.if_code.op2);
-            fputs(" GOTO ",f);
-            operand_print(f,code->u.if_code.label);
+            fputs("IF ", f);
+            operand_print(f, code->u.if_code.op1);
+            fputs(" ", f);
+            operand_print(f, code->u.if_code.relop);
+            fputs(" ", f);
+            operand_print(f, code->u.if_code.op2);
+            fputs(" GOTO ", f);
+            operand_print(f, code->u.if_code.label);
             break;
         case DEC_IR:
-            fputs("DEC ",f);
+            fputs("DEC ", f);
             operand_print(f, code->u.assign.left);
-            fputs(" ",f);
-            operand_print(f,code->u.assign.right);
+            fputs(" ", f);
+            operand_print(f, code->u.assign.right);
             break;
         case CALL_IR:
-            operand_print(f,code->u.assign.left);
-            fputs(" := CALL ",f);
+            operand_print(f, code->u.assign.left);
+            fputs(" := CALL ", f);
             operand_print(f, code->u.assign.right);
             break;
         default:
             break;
         }
-        fputs("\n",f);
-        cur=cur->next;
+        fputs("\n", f);
+        cur = cur->next;
     }
     return NULL;
 }
 
-void operand_print(FILE* f, Operand op)
+void operand_print(FILE *f, Operand op)
 {
-    switch(op->kind)
+    switch (op->kind)
     {
-        case VARIABLE_OP:
-            fprintf(f,"%s",op->u.char_value);
-            break;
-        case CONSTANT_OP:
-            fprintf(f,"#%d", op->u.int_value);
-            break;
-        case ADDRESS_OP:
-            fprintf(f, "&t%d",op->u.int_value);
-            break;
-        case MEMORY_OP:
-            fprintf(f,"*t%d",op->u.int_value);
-            break;
-        case LABEL_OP:
-            fprintf(f,"label%d",op->u.int_value);
-            break;
-        case SIZE_OP:
-            fprintf(f,"%d",op->u.int_value);
-            break;
-        case RELOP_OP:case FUNCTION_OP:
-            fputs(op->u.char_value, f);
-            break;
-        default:
-            assert(0);
-            break;
+    case VARIABLE_OP:
+        fprintf(f, "%s", op->u.char_value);
+        break;
+    case CONSTANT_OP:
+        fprintf(f, "#%d", op->u.int_value);
+        break;
+    case ADDRESS_OP:
+        fprintf(f, "&t%d", op->u.int_value);
+        break;
+    case MEMORY_OP:
+        fprintf(f, "*t%d", op->u.int_value);
+        break;
+    case LABEL_OP:
+        fprintf(f, "label%d", op->u.int_value);
+        break;
+    case SIZE_OP:
+        fprintf(f, "%d", op->u.int_value);
+        break;
+    case RELOP_OP:
+    case FUNCTION_OP:
+        fputs(op->u.char_value, f);
+        break;
+    default:
+        assert(0);
+        break;
     }
 }

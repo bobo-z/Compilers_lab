@@ -6,7 +6,27 @@ void init()
 {
     int i;
     for (i = 0; i < TAB_SIZE; i++)
+    {
         symbol_tab[i] = NULL;
+    }
+    
+    Type int_type = (Type)malloc(sizeof(struct Type_));
+    int_type->kind = BASIC;
+    int_type->u.basic = BASIC_INT;
+    Type read_func = (Type)malloc(sizeof(struct Type_));
+    read_func->kind = FUNCTION;
+    read_func->u.function.ret = int_type;
+    read_func->u.function.param = NULL;
+    Type write_func = (Type)malloc(sizeof(struct Type_));
+    write_func->kind = FUNCTION;
+    write_func->u.function.ret = int_type;
+    FieldList f = (FieldList)malloc(sizeof(struct FieldList_));
+    f->tail = NULL;
+    f->type = int_type;
+    write_func->u.function.param = f;
+
+    insert("read", read_func);
+    insert("write", write_func);
 }
 unsigned int hash_pjw(char *name)
 {

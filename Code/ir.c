@@ -1,9 +1,11 @@
 #include "ir.h"
 
-Operand ZERO = new_int_op(CONSTANT_OP,0);
-Operand ONE = new_int_op(CONSTANT_OP, 1);
+Operand ZERO = NULL;
+Operand ONE = NULL;
 void ir(Node *p)
 {
+    ZERO = new_int_op(CONSTANT_OP, 0);
+    ONE = new_int_op(CONSTANT_OP, 1);
     if (strcmp("Program", p->name) == 0)
         translate_ExtDefList(p->children[0]);
 }
@@ -12,14 +14,14 @@ void translate_ExtDefList(Node *p)
 {
     if (p == NULL)
         return;
-    
+
     translate_ExtDef(p->children[0]);
     translate_ExtDefList(p->children[1]);
 }
 
 void translate_ExtDef(Node *p)
 {
-    
+
     //Specifer FunDec Compst
     //Specifer must be int
     if (p->child_num == 2)
@@ -46,7 +48,9 @@ void translate_FunDec(Node *p)
         while (1)
         {
             //PARAM t
-            assert(0 == strcmp("TYPE", varlist->children[0]->children[0]->char_val));
+            fprintf(stderr, "%s\n", varlist->children[0]->children[0]->children[0]->name);
+            assert(0 == strcmp("TYPE", varlist->children[0]->children[0]->children[0]->name));
+
             Node *vardec = varlist->children[0]->children[1];
             //ID or ID LB INT RB
             Operand op = new_char_op(VARIABLE_OP, vardec->children[0]->char_val);
@@ -96,17 +100,16 @@ Dec → VarDec
             Operand size = new_int_op(SIZE_OP, array_size(f->type));
             code_insert(new_code(2, DEC_IR, op, size));
         }
-        fprintf(stderr,"%d\n",DecList->children[0]->child_num);
-        if(DecList->children[0]->child_num>1)
+        if (DecList->children[0]->child_num > 1)
         {
             //VarDec ASSIGNOP Exp
+            fprintf(stderr, "3\n");
             Operand op = new_char_op(VARIABLE_OP, vardec->children[0]->char_val);
             Operand t1 = new_tmp();
-            translate_Exp(DecList->children[0]->children[2],t1);
+            translate_Exp(DecList->children[0]->children[2], t1);
 
-            code_insert(new_code(2,ASSIGN_IR,op,t1));
+            code_insert(new_code(2, ASSIGN_IR, op, t1));
         }
-
 
         if (DecList->child_num > 1)
             DecList = DecList->children[2];
@@ -118,11 +121,78 @@ Dec → VarDec
 
 void translate_StmtList(Node *p)
 {
+    //StmtList->empty
+    if (p == NULL)
+        return;
+    //StmtList->Stmt StmtList
+    translate_Stmt(p->children[0]);
+    translate_StmtList(p->children[1]);
 }
 
-void translate_Exp(Node* p, Operand place)
+void translate_Stmt(Node *p)
 {
-    if(0==strcmp("INT",p->children[0]->name))
+    if (p->child_num == 1)
+    {
+        //Stmt -> CompSt
+        translate_Compst(p->children[0]);
+    }
+    else if (p->child_num == 2)
+    {
+        //Stmt-> Exp SEMI
+        translate_Exp(p->children[0], NULL);
+    }
+    else if (p->child_num == 3)
+    {
+        //Stmt -> RETURN Exp SEMI
+        Operand t1 = new_tmp();
+        translate_Exp(p->children[1], t1);
+        code_insert(new_code(1, RETURN_IR, t1));
+    }
+    else if (p->child_num == 5)
+    {
+        if (0 == strcmp(p->children[0]->name, "IF"))
+        {
+            //Stmt -> IF LP Exp RP Stmt
+            Operand label1 = new_label();
+            Operand label2 = new_label();
+            translate_Cond(p->children[2], label1, label2);
+            code_insert(new_code(1, LABEL_IR, label1));
+            translate_Stmt(p->children[4]);
+            code_insert(new_code(1, LABEL_IR, label2));
+        }
+        else
+        {
+            //Stmt -> WHILE LP Exp RP Stmt
+            Operand label1 = new_label();
+            Operand label2 = new_label();
+            Operand label3 = new_label();
+            code_insert(new_code(1, LABEL_IR, label1));
+            translate_Cond(p->children[2], label2, label3);
+            code_insert(new_code(1, LABEL_IR, label2));
+            translate_Stmt(p->children[4]);
+            code_insert(new_code(1, GOTO_IR, label1));
+            code_insert(new_code(1, LABEL_IR, label3));
+        }
+    }
+    else if (p->child_num == 7)
+    {
+        //Stmt -> IF LP Exp RP Stmt ELSE Stmt
+        Operand label1 = new_label();
+        Operand label2 = new_label();
+        Operand label3 = new_label();
+        translate_Cond(p->children[2], label1, label2);
+        code_insert(new_code(1, LABEL_IR, label1));
+        translate_Stmt(p->children[4]);
+        code_insert(new_code(1, GOTO_IR, label3));
+        code_insert(new_code(1, LABEL_IR, label2));
+        translate_Stmt(p->children[6]);
+        code_insert(new_code(1, LABEL_IR, label3));
+    }
+}
+
+void translate_Exp(Node *p, Operand place)
+{
+    if (0 == strcmp("INT", p->children[0]->name))
     {
         //Exp -> INT
         Operand op = new_int_op(CONSTANT_OP, p->children[0]->int_val);
@@ -130,7 +200,7 @@ void translate_Exp(Node* p, Operand place)
         /*place ->kind = op->kind;
         place->u = op->u;*/
     }
-    else if(0==strcmp("ID",p->children[0]->name))
+    else if (p->child_num == 1 && 0 == strcmp("ID", p->children[0]->name))
     {
         //Exp -> ID
         Operand op = new_char_op(VARIABLE_OP, p->children[0]->char_val);
@@ -140,66 +210,181 @@ void translate_Exp(Node* p, Operand place)
         place->u = op->u;
         */
     }
-    else if(p->child_num>1&&(0==strcmp("ASSIGNOP",p->children[1]->name)))
+    else if (p->child_num > 1 && (0 == strcmp("ASSIGNOP", p->children[1]->name)))
     {
-        Operand t1 = new_tmp();
-        Operand t2 = new_tmp();
-        translate_Exp(p->children[0],t1);
-        translate_Exp(p->children[2],t2);
-        code_insert(new_code(2,ASSIGN_IR, t1, t2));
+        if (0 == strcmp(p->children[0]->children[0]->name, "ID"))
+        {
+            Operand t1 = new_tmp();
+            Operand var = new_char_op(VARIABLE_OP, p->children[0]->children[0]->char_val);
+            translate_Exp(p->children[2], t1);
+            //translate_Exp(p->children[2], t2);
+            code_insert(new_code(2, ASSIGN_IR, var, t1));
+        }
     }
-    else if(p->child_num>1&&(0==strcmp("PLUS",p->children[1]->name)))
+    else if (p->child_num > 1 && (0 == strcmp("PLUS", p->children[1]->name)))
     {
         Operand t1 = new_tmp();
         Operand t2 = new_tmp();
-        translate_Exp(p->children[0],t1);
-        translate_Exp(p->children[2],t2);
+        translate_Exp(p->children[0], t1);
+        translate_Exp(p->children[2], t2);
         code_insert(new_code(3, ADD_IR, place, t1, t2));
     }
-    else if(p->child_num>1&&(0==strcmp("MINUS",p->children[1]->name)))
+    else if (p->child_num > 1 && (0 == strcmp("MINUS", p->children[1]->name)))
     {
         Operand t1 = new_tmp();
         Operand t2 = new_tmp();
-        translate_Exp(p->children[0],t1);
-        translate_Exp(p->children[2],t2);
+        translate_Exp(p->children[0], t1);
+        translate_Exp(p->children[2], t2);
         code_insert(new_code(3, SUB_IR, place, t1, t2));
     }
-    else if(p->child_num>1&&(0==strcmp("STAR",p->children[1]->name)))
+    else if (p->child_num > 1 && (0 == strcmp("STAR", p->children[1]->name)))
     {
         Operand t1 = new_tmp();
         Operand t2 = new_tmp();
-        translate_Exp(p->children[0],t1);
-        translate_Exp(p->children[2],t2);
+        translate_Exp(p->children[0], t1);
+        translate_Exp(p->children[2], t2);
         code_insert(new_code(3, MUL_IR, place, t1, t2));
     }
-    else if(p->child_num>1&&(0==strcmp("DIV",p->children[1]->name)))
+    else if (p->child_num > 1 && (0 == strcmp("DIV", p->children[1]->name)))
     {
         Operand t1 = new_tmp();
         Operand t2 = new_tmp();
-        translate_Exp(p->children[0],t1);
-        translate_Exp(p->children[2],t2);
+        translate_Exp(p->children[0], t1);
+        translate_Exp(p->children[2], t2);
         code_insert(new_code(3, DIV_IR, place, t1, t2));
     }
-    else if(p->child_num>1&&(0==strcmp("MINUS",p->children[0]->name)))
+    else if (p->child_num > 1 && (0 == strcmp("MINUS", p->children[0]->name)))
     {
         //Exp -> MINUS Exp
         Operand t1 = new_tmp();
-        translate_Exp(p->children[1],t1);
-        code_insert(new_code(3,SUB_IR, place, ZERO, t1));
+        translate_Exp(p->children[1], t1);
+        code_insert(new_code(3, SUB_IR, place, ZERO, t1));
     }
-    else if(p->child_num>1&&(0==strcmp("RELOP",p->children[1]->name)||0==strcmp("NOT",p->children[0]->name)||0==strcmp("AND",p->children[1]->name)||0==strcmp("OR",p->children[1]->name)))
+    else if (p->child_num > 1 && (0 == strcmp("RELOP", p->children[1]->name) || 0 == strcmp("NOT", p->children[0]->name) || 0 == strcmp("AND", p->children[1]->name) || 0 == strcmp("OR", p->children[1]->name)))
     {
         Operand label1 = new_label();
         Operand label2 = new_label();
-        
-        code_insert(new_code(2,ASSIGN_IR, place, ZERO));
-        translate_Cond(p,label1,label2);
+
+        code_insert(new_code(2, ASSIGN_IR, place, ZERO));
+        translate_Cond(p, label1, label2);
         code_insert(new_code(1, LABEL_IR, label1));
         code_insert(new_code(2, ASSIGN_IR, place, ONE));
-
-
+        code_insert(new_code(1, LABEL_IR, label2));
     }
+    else if (p->child_num == 3 && 0 == strcmp("ID", p->children[0]->name))
+    {
+        //Exp -> ID LP RP
+        if (0 == strcmp(p->children[0]->char_val, "read"))
+        {
+            code_insert(new_code(1, READ_IR, place));
+        }
+        else
+        {
+            Operand func = new_char_op(FUNCTION_OP, p->children[0]->char_val);
+            if (place != NULL)
+                code_insert(new_code(2, CALL_IR, place, func));
+        }
+    }
+    else if (p->child_num == 4 && 0 == strcmp("ID", p->children[0]->name))
+    {
+        ArgList arg_list = NULL;
+        arg_list = translate_Args(p->children[2], arg_list);
+        if (0 == strcmp(p->children[0]->char_val, "write"))
+        {
 
+            code_insert(new_code(1, WRITE_IR, arg_list->op));
+            if (place != NULL)
+                code_insert(new_code(2, ASSIGN_IR, place, ZERO));
+        }
+        else
+        {
+            ArgList cur = arg_list;
+            while (cur != NULL)
+            {
+                code_insert(new_code(1, ARG_IR, cur->op));
+                cur = cur->next;
+            }
+            Operand func = new_char_op(FUNCTION_OP, p->children[0]->char_val);
+            if (place != NULL)
+                code_insert(new_code(2, CALL_IR, place, func));
+        }
+    }
+    else if (p->child_num > 1 && 0 == strcmp("LP", p->children[0]->name))
+    {
+        translate_Exp(p->children[1], place);
+    }
+}
+
+ArgList translate_Args(Node *p, ArgList head)
+{
+    ArgList tail = NULL;
+    while (1)
+    {
+        Operand t1 = new_tmp();
+        translate_Exp(p->children[0], t1);
+        ArgList arg = (ArgList)malloc(sizeof(struct ArgList_));
+        arg->op = t1;
+        arg->next = NULL;
+        if (head == NULL)
+        {
+            head = arg;
+            tail = head;
+        }
+        else
+        {
+            tail->next = arg;
+            tail = arg;
+        }
+
+        if (p->child_num == 1)
+            break;
+        else
+            p = p->children[2];
+    }
+    return head;
+}
+
+void translate_Cond(Node *p, Operand label_true, Operand label_false)
+{
+    if (0 == strcmp("NOT", p->children[0]->name))
+    {
+        //Exp -> NOT Exp
+        translate_Cond(p->children[1], label_false, label_true);
+    }
+    else if (p->child_num > 1 && 0 == strcmp("RELOP", p->children[1]->name))
+    {
+        //Exp -> Exp RELOP Exp
+        Operand t1 = new_tmp();
+        Operand t2 = new_tmp();
+        translate_Exp(p->children[0], t1);
+        translate_Exp(p->children[2], t2);
+        Operand op = new_char_op(RELOP_OP, p->children[1]->char_val);
+        code_insert(new_code(4, IF_IR, t1, op, t2, label_true));
+        code_insert(new_code(1, GOTO_IR, label_false));
+    }
+    else if (p->child_num > 1 && 0 == strcmp("AND", p->children[1]->name))
+    {
+        //Exp -> Exp AND Exp
+        Operand label1 = new_label();
+        translate_Cond(p->children[0], label1, label_false);
+        code_insert(new_code(1, LABEL_IR, label1));
+        translate_Cond(p->children[2], label_true, label_false);
+    }
+    else if (p->child_num > 1 && 0 == strcmp("OR", p->children[1]->name))
+    {
+        Operand label1 = new_label();
+        translate_Cond(p->children[0], label_true, label1);
+        code_insert(new_code(1, LABEL_IR, label1));
+        translate_Cond(p->children[2], label_true, label_false);
+    }
+    else
+    {
+        Operand t1 = new_tmp();
+        translate_Exp(p, t1);
+        Operand op = new_char_op(RELOP_OP, "!=");
+        code_insert(new_code(4, IF_IR, t1, op, ZERO, label_true));
+        code_insert(new_code(1, GOTO_IR, label_false));
+    }
 }
 
 int array_size(Type t)

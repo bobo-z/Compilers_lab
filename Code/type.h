@@ -4,6 +4,7 @@
 //lab2 type
 typedef struct Type_ *Type;
 typedef struct FieldList_ *FieldList;
+typedef struct ArgList_ *ArgList;
 
 #define BASIC_INT 1
 #define BASIC_FLOAT 2
@@ -111,6 +112,12 @@ struct InterCode_
             Operand relop, op1, op2, label;
         } if_code;
     } u;
+};
+
+struct ArgList_
+{
+    Operand op;
+    ArgList next;
 };
 
 #endif
