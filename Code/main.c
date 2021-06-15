@@ -53,7 +53,6 @@ int main(int argc, char **argv)
 {
     #ifdef TEST
     test();
-    code_print(argv[1]);
     #else
     if (argc < 1)
         return 1;
@@ -70,9 +69,11 @@ int main(int argc, char **argv)
         //PrintTree(root,0);
         semantic(root);
         ir(root);
+        code_print("out.ir");
+        mips(argv[2]);
     }
     //fprintf(stderr, "s\n");
-    code_print(argv[2]);
+    //code_print(argv[2]);
     fclose(f);
     #endif
     return 0;

@@ -59,7 +59,6 @@ InterCode new_code(int num, int kind, ...)
     case 3:
         //binop
         code->u.binop.result = va_arg(vl, Operand);
-        fprintf(stderr, "resule:\n");
         code->u.binop.op1 = va_arg(vl, Operand);
         code->u.binop.op2 = va_arg(vl, Operand);
         break;
@@ -109,7 +108,6 @@ InterCodes code_print(char *filename)
     while (cur != NULL)
     {
         code = cur->code;
-        fprintf(stderr, "kind: %d\n", code->kind);
         switch (code->kind)
         {
         case ASSIGN_IR:
@@ -209,7 +207,6 @@ InterCodes code_print(char *filename)
 
 void operand_print(FILE *f, Operand op)
 {
-    fprintf(stderr,"op:%d\n", op->kind);
     switch (op->kind)
     {
     case VARIABLE_OP:

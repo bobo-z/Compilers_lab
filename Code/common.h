@@ -13,5 +13,6 @@
 #include "semantic.h"
 #include "intercodes.h"
 #include "ir.h"
+#include "MIPS.h"
 
 #endif
