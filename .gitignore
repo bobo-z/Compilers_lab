@@ -6,4 +6,5 @@
 *.output
 *.ir
 *.sh
+*.s
 parser
