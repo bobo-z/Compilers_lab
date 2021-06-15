@@ -2,10 +2,12 @@
 
 Operand ZERO = NULL;
 Operand ONE = NULL;
+Operand FOUR = NULL;
 void ir(Node *p)
 {
     ZERO = new_int_op(CONSTANT_OP, 0);
     ONE = new_int_op(CONSTANT_OP, 1);
+    FOUR = new_int_op(CONSTANT_OP, 4);
     if (strcmp("Program", p->name) == 0)
         translate_ExtDefList(p->children[0]);
 }
@@ -48,7 +50,7 @@ void translate_FunDec(Node *p)
         while (1)
         {
             //PARAM t
-            fprintf(stderr, "%s\n", varlist->children[0]->children[0]->children[0]->name);
+            //fprintf(stderr, "%s\n", varlist->children[0]->children[0]->children[0]->name);
             assert(0 == strcmp("TYPE", varlist->children[0]->children[0]->children[0]->name));
 
             Node *vardec = varlist->children[0]->children[1];
@@ -103,7 +105,7 @@ Dec → VarDec
         if (DecList->children[0]->child_num > 1)
         {
             //VarDec ASSIGNOP Exp
-            fprintf(stderr, "3\n");
+            //fprintf(stderr, "3\n");
             Operand op = new_char_op(VARIABLE_OP, vardec->children[0]->char_val);
             Operand t1 = new_tmp();
             translate_Exp(DecList->children[0]->children[2], t1);
@@ -212,14 +214,28 @@ void translate_Exp(Node *p, Operand place)
     }
     else if (p->child_num > 1 && (0 == strcmp("ASSIGNOP", p->children[1]->name)))
     {
+        Operand left = NULL, right = NULL;
         if (0 == strcmp(p->children[0]->children[0]->name, "ID"))
         {
             Operand t1 = new_tmp();
-            Operand var = new_char_op(VARIABLE_OP, p->children[0]->children[0]->char_val);
-            translate_Exp(p->children[2], t1);
-            //translate_Exp(p->children[2], t2);
-            code_insert(new_code(2, ASSIGN_IR, var, t1));
+            left = new_char_op(VARIABLE_OP, p->children[0]->children[0]->char_val);
         }
+        else
+        {
+            //Exp-> Exp1 ASSIGN Exp
+            //Exp1 -> Exp LB Exp RB
+            Operand var = new_char_op(MEMTOADDR_OP, p->children[0]->children[0]->children[0]->char_val);
+            Operand t1 = new_tmp();
+            translate_Exp(p->children[0]->children[2], t1);
+            Operand t2 = new_tmp();
+            code_insert(new_code(3, MUL_IR, t2, t1, FOUR));
+            code_insert(new_code(3, ADD_IR, t1, var, t2));
+            left = new_char_op(ADDRTOMEM_OP, t1->u.char_value);
+        }
+        Operand t3 = new_tmp();
+        translate_Exp(p->children[2], t3);
+        right = t3;
+        code_insert(new_code(2, ASSIGN_IR, left, right));
     }
     else if (p->child_num > 1 && (0 == strcmp("PLUS", p->children[1]->name)))
     {
@@ -313,11 +329,28 @@ void translate_Exp(Node *p, Operand place)
     {
         translate_Exp(p->children[1], place);
     }
+    else if (p->child_num > 1 && 0 == strcmp("LB", p->children[1]->name))
+    {
+        //Exp -> Exp(ID) LB Exp RB
+        if(place == NULL)
+            return;
+        Operand var = new_char_op(MEMTOADDR_OP, p->children[0]->children[0]->char_val);
+        Operand t1 = new_tmp();
+        translate_Exp(p->children[2], t1);
+        //code_insert
+        Operand t2 = new_tmp();
+        code_insert(new_code(3, MUL_IR, t2, t1, FOUR));
+        code_insert(new_code(3, ADD_IR, t1, var, t2));
+        Operand t3 = new_tmp();
+        t3->kind = ADDRTOMEM_OP;
+        strncpy(t3->u.char_value, t1->u.char_value, NAME_LEN);
+        code_insert(new_code(2, ASSIGN_IR, place, t3));
+    }
 }
 
 ArgList translate_Args(Node *p, ArgList head)
 {
-    ArgList tail = NULL;
+    //ArgList tail = NULL;
     while (1)
     {
         Operand t1 = new_tmp();
@@ -328,12 +361,14 @@ ArgList translate_Args(Node *p, ArgList head)
         if (head == NULL)
         {
             head = arg;
-            tail = head;
+            //tail = head;
         }
         else
         {
-            tail->next = arg;
-            tail = arg;
+            arg->next = head;
+            head = arg;
+            //tail->next = arg;
+            //tail = arg;
         }
 
         if (p->child_num == 1)

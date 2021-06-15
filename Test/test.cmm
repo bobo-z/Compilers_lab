@@ -1,9 +1,7 @@
-int main()
+int above(int a, int b)
 {
-    int n;
-    int a;
-    a = 1;
-    n = read();
-    write(n);
-    return 0;
+    if(a > b)
+        return 1;
+    else
+        return 0;
 }

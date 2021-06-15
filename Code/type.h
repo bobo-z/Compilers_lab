@@ -52,8 +52,8 @@ struct Operand_
         VARIABLE_OP,
         CONSTANT_OP,
         FUNCTION_OP,
-        ADDRESS_OP,
-        MEMORY_OP,
+        ADDRTOMEM_OP,
+        MEMTOADDR_OP,
         LABEL_OP,
         SIZE_OP,
         RELOP_OP

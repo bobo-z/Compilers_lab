@@ -67,10 +67,11 @@ int main(int argc, char **argv)
     yyparse();
     if(!Error)
     {
-        PrintTree(root,0);
+        //PrintTree(root,0);
         semantic(root);
         ir(root);
     }
+    fprintf(stderr, "s\n");
     code_print(argv[2]);
     fclose(f);
     #endif

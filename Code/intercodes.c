@@ -59,6 +59,7 @@ InterCode new_code(int num, int kind, ...)
     case 3:
         //binop
         code->u.binop.result = va_arg(vl, Operand);
+        fprintf(stderr, "resule:\n");
         code->u.binop.op1 = va_arg(vl, Operand);
         code->u.binop.op2 = va_arg(vl, Operand);
         break;
@@ -104,12 +105,11 @@ InterCodes code_print(char *filename)
     }
     InterCodes cur = code_root;
     InterCode code = NULL;
-    int i = 0;
+    //int i = 0;
     while (cur != NULL)
     {
-        fprintf(stderr, "%d\n",i);
-        i++;
         code = cur->code;
+        fprintf(stderr, "kind: %d\n", code->kind);
         switch (code->kind)
         {
         case ASSIGN_IR:
@@ -162,7 +162,6 @@ InterCodes code_print(char *filename)
             operand_print(f, code->u.sinop.op);
             break;
         case ARG_IR:
-            fprintf(stderr, "678\n");
             fputs("ARG ", f);
             operand_print(f, code->u.sinop.op);
             break;
@@ -175,7 +174,6 @@ InterCodes code_print(char *filename)
             operand_print(f, code->u.sinop.op);
             break;
         case WRITE_IR:
-            fprintf(stderr, "69\n");
             fputs("WRITE ", f);
             operand_print(f, code->u.sinop.op);
             break;
@@ -211,6 +209,7 @@ InterCodes code_print(char *filename)
 
 void operand_print(FILE *f, Operand op)
 {
+    fprintf(stderr,"op:%d\n", op->kind);
     switch (op->kind)
     {
     case VARIABLE_OP:
@@ -219,11 +218,11 @@ void operand_print(FILE *f, Operand op)
     case CONSTANT_OP:
         fprintf(f, "#%d", op->u.int_value);
         break;
-    case ADDRESS_OP:
-        fprintf(f, "&t%d", op->u.int_value);
+    case ADDRTOMEM_OP:
+        fprintf(f, "*%s", op->u.char_value);
         break;
-    case MEMORY_OP:
-        fprintf(f, "*t%d", op->u.int_value);
+    case MEMTOADDR_OP:
+        fprintf(f, "&%s", op->u.char_value);
         break;
     case LABEL_OP:
         fprintf(f, "label%d", op->u.int_value);
