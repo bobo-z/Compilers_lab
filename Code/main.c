@@ -71,7 +71,7 @@ int main(int argc, char **argv)
         semantic(root);
         ir(root);
     }
-    fprintf(stderr, "s\n");
+    //fprintf(stderr, "s\n");
     code_print(argv[2]);
     fclose(f);
     #endif
