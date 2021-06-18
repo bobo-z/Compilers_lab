@@ -1,0 +1,22 @@
+int Add(int ai, int aj) {
+    return ai + aj;
+}
+
+int Sub(int si, int sj) {
+    return si - sj;
+}
+
+int Mul(int mi, int mj) {
+    return mi * mj;
+}
+
+int main() {
+    int i, j, k, l, res;
+    i = read();
+    j = read();
+    k = read();
+    l = read();
+    res = Add(Mul(Sub(i, j), Sub(i, j)), Add(k, l));
+    write(res);
+    return 0;
+}

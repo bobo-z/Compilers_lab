@@ -198,7 +198,8 @@ void translate_Exp(Node *p, Operand place)
     {
         //Exp -> INT
         Operand op = new_int_op(CONSTANT_OP, p->children[0]->int_val);
-        code_insert(new_code(2, ASSIGN_IR, place, op));
+        if(place!=NULL)
+            code_insert(new_code(2, ASSIGN_IR, place, op));
         /*place ->kind = op->kind;
         place->u = op->u;*/
     }
@@ -206,7 +207,8 @@ void translate_Exp(Node *p, Operand place)
     {
         //Exp -> ID
         Operand op = new_char_op(VARIABLE_OP, p->children[0]->char_val);
-        code_insert(new_code(2, ASSIGN_IR, place, op));
+        if(place!=NULL)
+            code_insert(new_code(2, ASSIGN_IR, place, op));
         /*
         place ->kind = op->kind;
         place->u = op->u;
@@ -236,6 +238,8 @@ void translate_Exp(Node *p, Operand place)
         translate_Exp(p->children[2], t3);
         right = t3;
         code_insert(new_code(2, ASSIGN_IR, left, right));
+        if(place!=NULL)
+            code_insert(new_code(2, ASSIGN_IR, place, left));
     }
     else if (p->child_num > 1 && (0 == strcmp("PLUS", p->children[1]->name)))
     {
@@ -243,7 +247,8 @@ void translate_Exp(Node *p, Operand place)
         Operand t2 = new_tmp();
         translate_Exp(p->children[0], t1);
         translate_Exp(p->children[2], t2);
-        code_insert(new_code(3, ADD_IR, place, t1, t2));
+        if(place!=NULL)
+            code_insert(new_code(3, ADD_IR, place, t1, t2));
     }
     else if (p->child_num > 1 && (0 == strcmp("MINUS", p->children[1]->name)))
     {
@@ -251,7 +256,8 @@ void translate_Exp(Node *p, Operand place)
         Operand t2 = new_tmp();
         translate_Exp(p->children[0], t1);
         translate_Exp(p->children[2], t2);
-        code_insert(new_code(3, SUB_IR, place, t1, t2));
+        if(place!=NULL)
+            code_insert(new_code(3, SUB_IR, place, t1, t2));
     }
     else if (p->child_num > 1 && (0 == strcmp("STAR", p->children[1]->name)))
     {
@@ -259,7 +265,8 @@ void translate_Exp(Node *p, Operand place)
         Operand t2 = new_tmp();
         translate_Exp(p->children[0], t1);
         translate_Exp(p->children[2], t2);
-        code_insert(new_code(3, MUL_IR, place, t1, t2));
+        if(place!=NULL)
+            code_insert(new_code(3, MUL_IR, place, t1, t2));
     }
     else if (p->child_num > 1 && (0 == strcmp("DIV", p->children[1]->name)))
     {
@@ -280,11 +287,12 @@ void translate_Exp(Node *p, Operand place)
     {
         Operand label1 = new_label();
         Operand label2 = new_label();
-
-        code_insert(new_code(2, ASSIGN_IR, place, ZERO));
+        if(place!=NULL)
+            code_insert(new_code(2, ASSIGN_IR, place, ZERO));
         translate_Cond(p, label1, label2);
         code_insert(new_code(1, LABEL_IR, label1));
-        code_insert(new_code(2, ASSIGN_IR, place, ONE));
+        if(place!=NULL)
+            code_insert(new_code(2, ASSIGN_IR, place, ONE));
         code_insert(new_code(1, LABEL_IR, label2));
     }
     else if (p->child_num == 3 && 0 == strcmp("ID", p->children[0]->name))
@@ -292,7 +300,8 @@ void translate_Exp(Node *p, Operand place)
         //Exp -> ID LP RP
         if (0 == strcmp(p->children[0]->char_val, "read"))
         {
-            code_insert(new_code(1, READ_IR, place));
+            if(place!=NULL)
+                code_insert(new_code(1, READ_IR, place));
         }
         else
         {
@@ -321,8 +330,15 @@ void translate_Exp(Node *p, Operand place)
                 cur = cur->next;
             }
             Operand func = new_char_op(FUNCTION_OP, p->children[0]->char_val);
-            if (place != NULL)
+            if (place == NULL)
+            {
+                Operand t1 = new_tmp();
+                code_insert(new_code(2, CALL_IR, t1, func));
+            }
+            else
+            {
                 code_insert(new_code(2, CALL_IR, place, func));
+            }
         }
     }
     else if (p->child_num > 1 && 0 == strcmp("LP", p->children[0]->name))

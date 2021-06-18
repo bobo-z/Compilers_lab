@@ -5,11 +5,7 @@ typedef struct VarManager_ *VarManager;
 struct VarManager_
 {
     Operand var;
-    union
-    {
-        int offset;
-        int reg_num;
-    } u;
+    int offset;
     VarManager next;
 };
 

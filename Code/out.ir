@@ -1,5 +1,10 @@
 FUNCTION main :
-t0 := #1
-a := t0
-t1 := #0
-RETURN t1
+DEC b 40
+t1 := #1
+a := t1
+t2 := a
+t4 := #3
+t5 := #2
+t3 := t4 * t5
+t6 := #0
+RETURN t6
